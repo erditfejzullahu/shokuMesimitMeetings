@@ -12,6 +12,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const [remoteStreams, setRemoteStreams] = useState<Record<string, {video?: MediaStream, audio?: MediaStream}>>({});
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [audioPaused, setAudioPaused] = useState<boolean | undefined>(false)
 
   const [producersState, setProducersState] = useState<mediasoupClient.types.Producer[]>([])
 
@@ -247,8 +248,9 @@ const Layout = ({ children }: { children: ReactNode }) => {
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
           const audioProducer = await sendTransport.produce({ track: audioTrack });
-          console.log(audioProducer, ' audioproducer');
+          console.log(audioProducer.paused, ' asdjasuidhasudh');
           
+          setAudioPaused(audioProducer.paused)
           producers.push(audioProducer);
           setProducersState((prevData) => [...prevData, audioProducer]);
         }
@@ -299,11 +301,6 @@ const Layout = ({ children }: { children: ReactNode }) => {
     if (streams >= 3) return "grid-rows-2";
     return "grid-rows-1";
   };
-
-  const [audioStarted, setAudioStarted] = useState<boolean | undefined>(producersState.find((item) => item.kind === "audio")?.paused)
-  useEffect(() => {
-    console.log("audiostarted ", audioStarted)
-  }, [audioStarted])
   
   const toggleProducerAudio = () => {
     const audioProducer = producersState.find((item) => item.kind === "audio");
@@ -313,10 +310,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
     if(audioProducer.paused){
       audioProducer.resume();
-      setAudioStarted(true)
+      setAudioPaused(false)
     }else{
       audioProducer.pause();
-      setAudioStarted(false)
+      setAudioPaused(true)
     }
   }
   
@@ -420,11 +417,11 @@ const Layout = ({ children }: { children: ReactNode }) => {
         {/* Controls Bar */}
         <div className="fixed bottom-6 left-0 right-0 flex justify-center">
           <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
-            <button className={`${audioStarted ? "bg-mob-secondary" : "bg-gray-700"}  hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} onClick={toggleProducerAudio}>
-              {audioStarted ? (
-                <FaMicrophone size={20}/>
-              ) : (
+            <button className={`${audioPaused ? "bg-gray-700 " : "bg-mob-secondary"}  hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} onClick={toggleProducerAudio}>
+              {audioPaused ? (
                 <FaMicrophoneSlash size={20}/>
+              ) : (
+                <FaMicrophone size={20}/>
               )}
             </button>
             <button className={`${videoStreamReady ? "bg-mob-secondary" : "bg-gray-700"} hover:bg-gray-600 cursor-pointer text-white p-3 rounded-full`} onClick={toggleProducerVideo}>
