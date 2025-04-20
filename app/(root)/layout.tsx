@@ -4,7 +4,7 @@ import { io, Socket } from "socket.io-client";
 import * as mediasoupClient from "mediasoup-client";
 import RemoteVideo from "@/components/RemoteVideo";
 import Image from "next/image";
-import {FaVideoSlash} from "react-icons/fa6"
+import {FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash} from "react-icons/fa6"
 
 const Layout = ({ children }: { children: ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -12,6 +12,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
   const [remoteStreams, setRemoteStreams] = useState<Record<string, {video?: MediaStream, audio?: MediaStream}>>({});
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const [producersState, setProducersState] = useState<mediasoupClient.types.Producer[]>([])
 
   useEffect(() => {
     const socket = io("https://onlinemeet.hajt24.xyz");
@@ -236,14 +238,19 @@ const Layout = ({ children }: { children: ReactNode }) => {
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack) {
           const videoProducer = await sendTransport.produce({ track: videoTrack });
+          
           producers.push(videoProducer);
+          setProducersState((prevData) => [...prevData, videoProducer]);
         }
 
         // Produce audio
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
           const audioProducer = await sendTransport.produce({ track: audioTrack });
+          console.log(audioProducer, ' audioproducer');
+          
           producers.push(audioProducer);
+          setProducersState((prevData) => [...prevData, audioProducer]);
         }
 
 
@@ -266,6 +273,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+
   const toggleFullscreen = () => {
     if (!isFullscreen) {
       document.documentElement.requestFullscreen().catch(err => {
@@ -284,26 +292,46 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   const checkStreamsCss = () => {
     const streams = Object.keys(remoteStreams).length;
-    if(streams < 3){
-      return "grid-rows-1"
-    }
-    if(streams >= 3){
-      return "grid-rows-2"
-    }
-    if(streams >= 8){
-      return "grid-rows-3"
-    }
-    if(streams >= 15){
-      return "grid-rows-4"
-    }
-    if(streams >= 28){
-      return "grid-rows-5"
-    }
-    if(streams > 45){
-      return "grid-rows-6"
+    if (streams > 45) return "grid-rows-6";
+    if (streams >= 28) return "grid-rows-5";
+    if (streams >= 15) return "grid-rows-4";
+    if (streams >= 8) return "grid-rows-3";
+    if (streams >= 3) return "grid-rows-2";
+    return "grid-rows-1";
+  };
+
+  const [audioStarted, setAudioStarted] = useState<boolean | undefined>(producersState.find((item) => item.kind === "audio")?.paused)
+  useEffect(() => {
+    console.log("audiostarted ", audioStarted)
+  }, [audioStarted])
+  
+  const toggleProducerAudio = () => {
+    const audioProducer = producersState.find((item) => item.kind === "audio");
+    console.log(audioProducer?.paused);
+    
+    if(!audioProducer) return;
+
+    if(audioProducer.paused){
+      audioProducer.resume();
+      setAudioStarted(true)
+    }else{
+      audioProducer.pause();
+      setAudioStarted(false)
     }
   }
   
+  const toggleProducerVideo = () => {
+    const videoProducer = producersState.find((item) => item.kind === "video");
+    if(!videoProducer) return;
+    console.log(videoProducer);
+    if(videoProducer.paused){
+      videoProducer.resume();
+      setVideoStreamReady(true)
+    }else{
+      videoProducer.pause();
+      setVideoStreamReady(false)
+    }
+  }
 
   return (
     <>
@@ -336,7 +364,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  muted
+                  // muted
                   className={`${Object.keys(remoteStreams).length === 0 ? "w-full h-full object-contain" : "w-auto h-fit object-cover"}  rounded-xl ${videoStreamReady ? "" : "invisible"}`}
                 />
                   {!videoStreamReady && <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
@@ -392,18 +420,19 @@ const Layout = ({ children }: { children: ReactNode }) => {
         {/* Controls Bar */}
         <div className="fixed bottom-6 left-0 right-0 flex justify-center">
           <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
-            <button className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full">
-              <Image src={"/assets/icons/microphone.svg"} alt="microphone" width={20} height={20} />
+            <button className={`${audioStarted ? "bg-mob-secondary" : "bg-gray-700"}  hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} onClick={toggleProducerAudio}>
+              {audioStarted ? (
+                <FaMicrophone size={20}/>
+              ) : (
+                <FaMicrophoneSlash size={20}/>
+              )}
             </button>
-            <button className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#fff">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#fff">
-                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
-              </svg>
+            <button className={`${videoStreamReady ? "bg-mob-secondary" : "bg-gray-700"} hover:bg-gray-600 cursor-pointer text-white p-3 rounded-full`} onClick={toggleProducerVideo}>
+              {videoStreamReady ? (
+                <FaVideo size={20}/>
+              ) : (
+                <FaVideoSlash size={20}/>
+              )}
             </button>
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full">
               Share Screen
