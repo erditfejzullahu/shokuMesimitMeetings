@@ -3,11 +3,15 @@ import React, { ReactNode, useRef, useState, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import * as mediasoupClient from "mediasoup-client";
 import RemoteVideo from "@/components/RemoteVideo";
+import Image from "next/image";
+import {FaVideoSlash} from "react-icons/fa6"
 
 const Layout = ({ children }: { children: ReactNode }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoStreamReady, setVideoStreamReady] = useState(false);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, {video?: MediaStream, audio?: MediaStream}>>({});
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const socket = io("https://onlinemeet.hajt24.xyz");
@@ -212,16 +216,22 @@ const Layout = ({ children }: { children: ReactNode }) => {
           });
         });
 
-        // Get user media and produce
-        localStream = await navigator.mediaDevices.getUserMedia({ 
-          audio: true, 
-          video: true 
-        });
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = localStream;
+        try {
+          // Get user media and produce
+          localStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: true, 
+            video: true 
+          });
+          if (videoRef.current) {
+            videoRef.current.srcObject = localStream;
+          }
+          setVideoStreamReady(true)
+        } catch (error) {
+          console.error(error);
+          localStream = new MediaStream();
+          setVideoStreamReady(false)
         }
-
+        
         // Produce video
         const videoTrack = localStream.getVideoTracks()[0];
         if (videoTrack) {
@@ -235,6 +245,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           const audioProducer = await sendTransport.produce({ track: audioTrack });
           producers.push(audioProducer);
         }
+
 
         setConnectionStatus("Mediasoup Connected and Producing");
       } catch (err: any) {
@@ -255,43 +266,154 @@ const Layout = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+    setIsFullscreen(!isFullscreen);
+  };
+
+  useEffect(() => {
+    console.log(Object.keys(remoteStreams).length)
+    
+  }, [remoteStreams])
+
+  const checkStreamsCss = () => {
+    const streams = Object.keys(remoteStreams).length;
+    if(streams < 3){
+      return "grid-rows-1"
+    }
+    if(streams >= 3){
+      return "grid-rows-2"
+    }
+    if(streams >= 8){
+      return "grid-rows-3"
+    }
+    if(streams >= 15){
+      return "grid-rows-4"
+    }
+    if(streams >= 28){
+      return "grid-rows-5"
+    }
+    if(streams > 45){
+      return "grid-rows-6"
+    }
+  }
+  
+
   return (
     <>
-      <div className="bg-gray-500 p-4">
-        <h2 className="text-white text-lg font-bold">Video Conference</h2>
-        <div className="flex flex-wrap gap-4">
-          {/* Local video */}
-          <div className="w-64">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full rounded-lg border-2 border-white"
-            />
-            <p className="text-white text-center">You</p>
+      <div className="bg-mob-primary min-h-screen h-full w-screen relative">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4 h-[65px] rounded-md bg-mob-oBlack shadow-xl shadow-black p-4">
+          <h2 className="text-white text-xl font-semibold">ShokuMesimit</h2>
+          <div className="flex items-center space-x-4">
+            <span className={`px-3 py-1 rounded-full text-sm ${
+              connectionStatus.includes("Error") ? "bg-red-500" : 
+              connectionStatus.includes("Connected") ? "bg-green-500" : "bg-yellow-500"
+            } text-white`}>
+              {connectionStatus}
+            </span>
+            <button 
+              onClick={toggleFullscreen}
+              className="bg-mob-secondary cursor-pointer border border-black-200 shadow-xl shadow-black hover:opacity-50 text-white font-semibold px-4 py-2 rounded-md"
+            >
+              {isFullscreen ? "Largo ekranin e plote" : "Ekran i plote"}
+            </button>
+          </div>
+        </div>
+
+        {/* Video Grid */}
+        <div className={` max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()}  ${Object.keys(remoteStreams).length === 0 ? "absolute h-full w-full" : "gap-4"}`}>
+          {/* Local video - larger when alone */}
+          <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? "w-full h-full" : ""} ${Object.keys(remoteStreams).length > 1 ? "row-span-2": ""}`}> {/* ANOTHER CHECK: IF ANOTHER ONE IS CLICKED IT HAS TO REMOVE ROW SPAN HERE AND OTHER STREAM HAS ROW-SPAN2 */}
+            <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? "w-full" : ""}`}> {/* 16:9 aspect ratio */}
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className={`${Object.keys(remoteStreams).length === 0 ? "w-full h-full object-contain" : "w-auto h-fit object-cover"}  rounded-xl ${videoStreamReady ? "" : "invisible"}`}
+                />
+                  {!videoStreamReady && <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
+                  <FaVideoSlash size={40} color="#fff"/>
+                  </div>}
+              <div className={`absolute bg-mob-oBlack bottom-3 left-3 bg-opacity-50 text-white px-4 py-1 rounded-md border border-black-200 shadow-xl shadow-black`}>
+              <span className="text-white font-medium">Ju</span>
+              </div>
+            </div>
           </div>
           
           {/* Remote videos */}
+          
           {Object.entries(remoteStreams).map(([socketId, streams]) => (
-            <div key={socketId} className="w-64">
-              {streams.video && (
-                <RemoteVideo stream={streams.video} />
-              )}
-              {streams.audio && (
-                <audio
-                  autoPlay
-                  playsInline
-                  ref={(el) => el && (el.srcObject = streams.audio)}
-                />
-              )}
-              <p className="text-white text-center">Participant {socketId.slice(0, 4)}</p>
+            <div 
+              key={socketId} 
+              className={`bg-mob-oBlack  w-auto h-auto border-black-200 border shadow-xl flex-1 shadow-black rounded-xl overflow-hidden`}> {/* if click make row-span-2 to show image clearly */}
+              <div className="relative flex h-full items-center justify-center"> {/* 16:9 aspect ratio */}
+                {streams.video && (
+                  <RemoteVideo 
+                    stream={streams.video}
+                  />
+                )}
+                {!streams.video && (
+                  <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
+                    <FaVideoSlash size={40} color="#fff"/>
+                  </div>
+                )}
+                {streams.audio && (
+                  <audio
+                    autoPlay
+                    muted
+                    style={{position: "absolute"}}
+                    playsInline
+                    ref={(el) => {
+                      if(el && streams.audio) {
+                        el.srcObject = streams.audio
+                      }
+                    }}
+                  />
+                )}
+                <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
+                  <span className="text-white font-medium">Participant {socketId.slice(0, 4)}</span>
+                </div>
+              </div>
             </div>
           ))}
+          
+          
+
         </div>
-        
-        <div className="mt-4">
-          <h3 className="text-white">Status: {connectionStatus}</h3>
+
+        {/* Controls Bar */}
+        <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+          <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
+            <button className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full">
+              <Image src={"/assets/icons/microphone.svg"} alt="microphone" width={20} height={20} />
+            </button>
+            <button className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#fff">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <button className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#fff">
+                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v8a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z" />
+              </svg>
+            </button>
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full">
+              Share Screen
+            </button>
+            <button className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#fff">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
       {children}

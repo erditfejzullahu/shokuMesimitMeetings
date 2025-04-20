@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useRef } from "react";
+import {isMobile} from "react-device-detect"
 
 const RemoteVideo = ({ stream }: { stream: MediaStream }) => {
     const ref = useRef<HTMLVideoElement>(null);
@@ -16,7 +17,7 @@ const RemoteVideo = ({ stream }: { stream: MediaStream }) => {
         autoPlay
         muted
         playsInline
-        style={{ width: "400px", border: "2px solid blue", marginBottom: "1rem" }}
+        className={`w-auto h-full  object-cover rounded-xl`}
       />
     );
   };
