@@ -1,23 +1,35 @@
-"use client";
-import React, { ReactNode, useRef, useState, useEffect } from "react";
+"use client"
+import React, { useEffect, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { FaCircleInfo, FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash } from 'react-icons/fa6';
+import { LuScreenShare, LuScreenShareOff } from 'react-icons/lu';
+import { useConnectionStatus } from '@/context/ConnectionContext';
 import { io, Socket } from "socket.io-client";
 import * as mediasoupClient from "mediasoup-client";
 import RemoteVideo from "@/components/RemoteVideo";
 import Image from "next/image";
-import {FaMicrophone, FaMicrophoneSlash, FaVideo, FaVideoSlash} from "react-icons/fa6"
 
-const Layout = ({ children }: { children: ReactNode }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
+const MeetingComponent = () => {
+    const {roomUrl} = useParams();
+    console.log(roomUrl);
+    
+    const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStreamReady, setVideoStreamReady] = useState(false);
   const [remoteStreams, setRemoteStreams] = useState<Record<string, {video?: MediaStream, audio?: MediaStream}>>({});
-  const [connectionStatus, setConnectionStatus] = useState("Disconnected");
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [audioPaused, setAudioPaused] = useState<boolean | undefined>(false)
+  // const [connectionStatus, setConnectionStatus] = useState("Disconnected");
+
+  const {setConnectionStatus} = useConnectionStatus()
+
+  const [audioPaused, setAudioPaused] = useState<boolean | undefined>(true)
 
   const [producersState, setProducersState] = useState<mediasoupClient.types.Producer[]>([])
 
+  const [sendTransportState, setSendTransportState] = useState<mediasoupClient.types.Transport>()
+
+  const deviceRef = useRef<mediasoupClient.types.Device>(null)
+  const socket = io("https://onlinemeet.hajt24.xyz");
+
   useEffect(() => {
-    const socket = io("https://onlinemeet.hajt24.xyz");
     let device: mediasoupClient.Device;
     let sendTransport: mediasoupClient.types.Transport;
     let recvTransport: mediasoupClient.types.Transport;
@@ -28,7 +40,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
     const initializeMediasoup = async () => {
       try {
-        setConnectionStatus("Initializing Mediasoup...");
+        setConnectionStatus(1);
         
         // Load device
         device = new mediasoupClient.Device();
@@ -36,7 +48,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
           socket.emit("getRouterRtpCapabilities", {}, resolve);
         });
         await device.load({ routerRtpCapabilities: rtpCapabilities });
-        setConnectionStatus("Mediasoup Device Loaded");
+        setConnectionStatus(1);
 
         // Create transports
         const iceServers = [
@@ -84,10 +96,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 });
               });
               callback();
-              setConnectionStatus(`${type} Transport Connected`);
+              setConnectionStatus(2);
             } catch (err: any) {
               errback(err);
-              setConnectionStatus(`${type} Transport Error: ${err.message}`);
+              setConnectionStatus(0);
             }
           });
 
@@ -157,7 +169,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             });
           } catch (err: any) {
             errback(err);
-            setConnectionStatus(`Produce Error: ${err.message}`);
+            setConnectionStatus(0);
           }
         });
 
@@ -256,10 +268,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
         }
 
 
-        setConnectionStatus("Mediasoup Connected and Producing");
+        setConnectionStatus(2);
       } catch (err: any) {
         console.error("Mediasoup Init Error", err);
-        setConnectionStatus(`Error: ${err.message}`);
+        setConnectionStatus(0);
       }
     };
 
@@ -275,17 +287,114 @@ const Layout = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  //fix
 
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      document.exitFullscreen();
+  // const createSendTransport = async (socket: any, device: mediasoupClient.Device): Promise<mediasoupClient.types.Transport> => {
+  //   const transportOptions = await new Promise<any>((resolve) => 
+  //     socket.emit("createWebRtcTransport", { type: "send" }, resolve)
+  //   );
+  
+  //   const transport = device.createSendTransport({
+  //     ...transportOptions,
+  //     iceServers: [
+  //       {
+  //         urls: ['turn:158.101.170.230:3478'],
+  //         username: 'erditi',
+  //         credential: 'erditbaba'
+  //       },
+  //       {
+  //         urls: ['stun:158.101.170.230:3478']
+  //       }
+  //     ],
+  //     iceTransportPolicy: "all"
+  //   });
+  
+  //   transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
+  //     try {
+  //       await new Promise<void>((resolve, reject) => {
+  //         socket.emit("connectTransport", {
+  //           transportId: transport.id,
+  //           dtlsParameters
+  //         }, (response: any) => {
+  //           response?.error ? reject(response.error) : resolve();
+  //         });
+  //       });
+  //       callback();
+  //     } catch (err) {
+  //       errback(err as any);
+  //     }
+  //   });
+  
+  //   transport.on("produce", async ({ kind, rtpParameters }, callback, errback) => {
+  //     try {
+  //       socket.emit("produce", {
+  //         transportId: transport.id,
+  //         kind,
+  //         rtpParameters
+  //       }, ({ id }: { id: string }) => {
+  //         callback({ id });
+  //       });
+  //     } catch (err) {
+  //       errback(err as any);
+  //     }
+  //   });
+  
+  //   return transport;
+  // };
+  
+  const [screenProducer, setScreenProducer] = useState<mediasoupClient.types.Producer | null>(null)
+  const screenVideoRef = useRef<HTMLVideoElement>(null);
+
+
+  //fix
+  const toggleScreenShare = async () => {
+    // try {
+    //   if(!screenProducer){
+    //     const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: false})
+    //     const track = stream.getVideoTracks()[0];
+        
+    //     if(!track) throw new Error("No screen video found");
+    //     if(deviceRef.current === null || deviceRef.current === undefined) return;
+
+    //     const screenSendTransport = await createSendTransport(socket, deviceRef.current)
+
+    //     const producer = await screenSendTransport.produce({
+    //       track,
+    //       appData: {screen: true}
+    //     })
+  
+    //     setScreenProducer(producer);
+  
+    //     if(screenVideoRef.current){
+    //       screenVideoRef.current.srcObject = new MediaStream([track]);
+    //     }
+  
+    //     track.onended = () => {
+    //       producer.close();
+    //       screenSendTransport.close();
+    //       setScreenProducer(null);
+    //       if(screenVideoRef.current){
+    //         screenVideoRef.current.srcObject = null
+    //       }
+    //     }
+    //   }
+    // } catch (error) {
+    //   console.error("Error starting screen share ", error);
+    // }
+  }
+
+  const stopScreenShare = () => {
+    if(screenProducer){
+      screenProducer.close();
+      setScreenProducer(null);
+      if(screenVideoRef.current){
+        screenVideoRef.current.srcObject = null;
+      }
     }
-    setIsFullscreen(!isFullscreen);
-  };
+  }
+
+
+  
 
   useEffect(() => {
     console.log(Object.keys(remoteStreams).length)
@@ -298,8 +407,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
     if (streams >= 28) return "grid-rows-5";
     if (streams >= 15) return "grid-rows-4";
     if (streams >= 8) return "grid-rows-3";
-    if (streams >= 3) return "grid-rows-2";
-    return "grid-rows-1";
+    if (streams > 2) return "grid-rows-2";
+    if (streams === 1) return "grid rows-1"
+    if(streams === 0) return ""
+    // return "grid-rows-1";
   };
   
   const toggleProducerAudio = () => {
@@ -332,28 +443,10 @@ const Layout = ({ children }: { children: ReactNode }) => {
 
   return (
     <>
-      <div className="bg-mob-primary min-h-screen h-full w-screen relative">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4 h-[65px] rounded-md bg-mob-oBlack shadow-xl shadow-black p-4">
-          <h2 className="text-white text-xl font-semibold">ShokuMesimit</h2>
-          <div className="flex items-center space-x-4">
-            <span className={`px-3 py-1 rounded-full text-sm ${
-              connectionStatus.includes("Error") ? "bg-red-500" : 
-              connectionStatus.includes("Connected") ? "bg-green-500" : "bg-yellow-500"
-            } text-white`}>
-              {connectionStatus}
-            </span>
-            <button 
-              onClick={toggleFullscreen}
-              className="bg-mob-secondary cursor-pointer border border-black-200 shadow-xl shadow-black hover:opacity-50 text-white font-semibold px-4 py-2 rounded-md"
-            >
-              {isFullscreen ? "Largo ekranin e plote" : "Ekran i plote"}
-            </button>
-          </div>
-        </div>
+      <div className="bg-mob-primary min-h-screen h-full w-screen relative ">
 
         {/* Video Grid */}
-        <div className={` max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()}  ${Object.keys(remoteStreams).length === 0 ? "absolute h-full w-full" : "gap-4"}`}>
+        <div className={` max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} !grid-rows-2 ${Object.keys(remoteStreams).length === 0 ? "absolute h-full w-full" : "gap-4"}`}>
           {/* Local video - larger when alone */}
           <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? "w-full h-full" : ""} ${Object.keys(remoteStreams).length > 1 ? "row-span-2": ""}`}> {/* ANOTHER CHECK: IF ANOTHER ONE IS CLICKED IT HAS TO REMOVE ROW SPAN HERE AND OTHER STREAM HAS ROW-SPAN2 */}
             <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? "w-full" : ""}`}> {/* 16:9 aspect ratio */}
@@ -362,7 +455,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
                   autoPlay
                   playsInline
                   // muted
-                  className={`${Object.keys(remoteStreams).length === 0 ? "w-full h-full object-contain" : "w-auto h-fit object-cover"}  rounded-xl ${videoStreamReady ? "" : "invisible"}`}
+                  className={`${Object.keys(remoteStreams).length === 0 ? "w-full h-full object-contain" : "h-full absolute top-0 right-0 left-0 mx-auto  object-contain"}  rounded-xl ${videoStreamReady ? "" : "invisible"}`}
                 />
                   {!videoStreamReady && <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
                   <FaVideoSlash size={40} color="#fff"/>
@@ -379,7 +472,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
             <div 
               key={socketId} 
               className={`bg-mob-oBlack  w-auto h-auto border-black-200 border shadow-xl flex-1 shadow-black rounded-xl overflow-hidden`}> {/* if click make row-span-2 to show image clearly */}
-              <div className="relative flex h-full items-center justify-center"> {/* 16:9 aspect ratio */}
+              <div className="relative h-full flex-1 my-auto flex items-center justify-center"> {/* 16:9 aspect ratio */}
                 {streams.video && (
                   <RemoteVideo 
                     stream={streams.video}
@@ -409,10 +502,32 @@ const Layout = ({ children }: { children: ReactNode }) => {
               </div>
             </div>
           ))}
+
+          
           
           
 
         </div>
+
+        {screenProducer && (
+            <div className="absolute m-auto flex-col z-50 left-0 right-0 bottom-0 top-0 w-[85%] h-[85%] bg-mob-oBlack border border-black-200 rounded-md p-4">
+              <div className="flex-1 h-[calc(100%-40px)]">
+              <video 
+                ref={screenVideoRef}
+                playsInline
+                muted
+                autoPlay
+                className="w-full h-full border object-contain"
+              />
+              </div>
+              <div className="">
+                <button onProgress={stopScreenShare} className="bg-mob-secondary cursor-pointer font-semibold w-full text-center m-auto items-center justify-center text-white flex flex-row rounded-b-sm px-4 py-2">
+                  Ndal ndarjen e ekranit
+                  <LuScreenShareOff size={24}/>
+                </button>
+              </div>
+            </div>
+          )}
 
         {/* Controls Bar */}
         <div className="fixed bottom-6 left-0 right-0 flex justify-center">
@@ -431,20 +546,18 @@ const Layout = ({ children }: { children: ReactNode }) => {
                 <FaVideoSlash size={20}/>
               )}
             </button>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full">
-              Share Screen
+            <button onClick={screenProducer ? stopScreenShare : toggleScreenShare} className={`${screenProducer ? "bg-mob-secondary hover:bg-gray-700" : "bg-gray-700 hover:bg-mob-secondary"}  cursor-pointer font-medium  group text-white px-4 py-2 rounded-full flex items-center gap-1.5 flex-row`}>
+              {screenProducer ? "Ndalo Shperndarjen" : "Ndaj Ekranin"}
+              <LuScreenShare size={20} className={`${screenProducer ? "text-white group-hover:text-mob-secondary" : "text-mob-secondary group-hover:text-white"} `}/>
             </button>
-            <button className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="#fff">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
-              </svg>
+            <button className="bg-gray-700 cursor-pointer hover:bg-gray-600 text-white p-3 rounded-full">
+              <FaCircleInfo size={20}/>
             </button>
           </div>
         </div>
       </div>
-      {children}
     </>
   );
-};
+}
 
-export default Layout;
+export default MeetingComponent
