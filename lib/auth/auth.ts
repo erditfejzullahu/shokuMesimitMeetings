@@ -11,14 +11,16 @@ export const login = async (username: string, password: string) => {
             body: JSON.stringify({username, password})
         })
         const data = await res.json();
+        console.log(data)
         if(res.ok){
             const {accessToken, refreshToken} = data.token;
             localStorage.setItem("accessToken", accessToken);
             localStorage.setItem("refreshToken", refreshToken);
         }
-        
+        return data;
     } catch (error) {
         console.error(error);
+        return false;
     }
 }
 

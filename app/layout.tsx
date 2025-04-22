@@ -25,7 +25,7 @@ export default function RootLayout({
         className={`${montserrat.className} antialiased`}
       >
         <ConnectionProvider>
-        {children}
+          {children}
         </ConnectionProvider>
       </body>
     </html>
