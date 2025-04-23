@@ -15,7 +15,7 @@ const page = async ({params}: {params: {roomUrl: string}}) => {
   return (
     <>
       <Header title={`${roomUrl}`}/>
-      <MeetingComponent />
+      <MeetingComponent roomUrl={roomUrl}/>
     </>
   )
 }

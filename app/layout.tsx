@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ConnectionProvider } from "@/context/ConnectionContext";
+import GlobalProvider from "@/context/GlobalProvider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat-sans",
@@ -24,9 +25,11 @@ export default function RootLayout({
       <body
         className={`${montserrat.className} antialiased`}
       >
+        <GlobalProvider>
         <ConnectionProvider>
           {children}
         </ConnectionProvider>
+        </GlobalProvider>
       </body>
     </html>
   );

@@ -3,39 +3,30 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { getAccessToken, isTokenExpired, login } from '@/lib/auth/auth';
-import { useRouter } from 'next/navigation';
-
+import { redirect, useRouter } from 'next/navigation';
+import { useGlobalContext } from '@/context/GlobalProvider';
+import LoadingComponent from './LoadingComponent';
 
 const LoginForm = () => {
-
+const {isLoggedIn, isLoading: loginLoading} = useGlobalContext();
 const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+const [username, setUsername] = useState('');
+const [password, setPassword] = useState('');
+const [showPassword, setShowPassword] = useState(false);
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState('');
+const [checkingAuth, setCheckingAuth] = useState(true)
 
+useEffect(() => {
+  if(isLoggedIn){
+    router.replace("/room")
+  }else{
+    setCheckingAuth(false);
+  }
+}, [isLoggedIn, router])
 
-  useEffect(() => {
-    const checkAuth = async () => {
-        const token = getAccessToken();
-        if(token){
-            console.log(token);
-            try {
-                const tokenCheck = await isTokenExpired(token)
-                console.log(tokenCheck)
-                if(tokenCheck.expired === false && tokenCheck.valid === true){
-                    router.replace("/room")
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        }
-    }
-    checkAuth();
-  }, [])
-  
-
+  if(loginLoading || checkingAuth) return <LoadingComponent />
+  if(isLoggedIn) return null;
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

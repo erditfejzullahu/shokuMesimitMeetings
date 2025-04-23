@@ -5,23 +5,19 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export const apiClient = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
     let accessToken = getAccessToken();
     let refreshToken = getRefreshToken();
-
+    
     if(!accessToken || !refreshToken){
         return fetch(`${API_BASE_URL}${endpoint}`, options);
     }
 
-    const isTokenExpiredOrInvalid = await isTokenExpired(accessToken);
-    if(isTokenExpiredOrInvalid.valid === false){
-        clearTokens()
-        window.location.href = "/login"
-        throw new Error("Token invalid");
-    }
+    const isTokenExpiredOrInvalid = isTokenExpired(accessToken);
 
     if(isTokenExpiredOrInvalid.expired){
         try {
             const refreshResponse = await fetch(`${API_BASE_URL}/api/Users/refresh`, {
                 method: "POST",
                 headers: {
+                    "ngrok-skip-browser-warning": "69420",
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({token: refreshToken})
@@ -44,6 +40,7 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}): Pr
     }
 
     const headers = new Headers(options.headers || {})
+    headers.set("ngrok-skip-browser-warning", "69420")
     headers.set("Authorization", `Bearer ${accessToken}`)
 
     return fetch(`${API_BASE_URL}${endpoint}`, {

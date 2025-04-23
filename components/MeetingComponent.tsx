@@ -9,9 +9,9 @@ import * as mediasoupClient from "mediasoup-client";
 import RemoteVideo from "@/components/RemoteVideo";
 import Image from "next/image";
 
-const MeetingComponent = () => {
-    const {roomUrl} = useParams();
-    console.log(roomUrl);
+const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
+    
+    
     
     const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStreamReady, setVideoStreamReady] = useState(false);
@@ -27,7 +27,7 @@ const MeetingComponent = () => {
   const [sendTransportState, setSendTransportState] = useState<mediasoupClient.types.Transport>()
 
   const deviceRef = useRef<mediasoupClient.types.Device>(null)
-  const socket = io("https://onlinemeet.hajt24.xyz");
+  const socket = io("https://onlinemeet.hajt24.xyz", {query: {roomId: roomUrl}});
 
   useEffect(() => {
     let device: mediasoupClient.Device;

@@ -1,4 +1,5 @@
-import {jwtVerify} from "jose";
+import {decodeJwt, jwtVerify} from "jose";
+import { importJWK } from 'jose';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -52,12 +53,12 @@ export const clearTokens = () => {
     }
 }
 
-export const isTokenExpired = async (token: string): Promise<{valid: boolean; expired: boolean}> => {
+export const isTokenExpired = (token: string): {expired: boolean} => {
     try {
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-        const {payload} = await jwtVerify(token, secret);
-        return {valid: true, expired: payload.exp ? payload.exp * 1000 < Date.now() : true}
+        const payload = decodeJwt(token);
+        return {expired: payload.exp ? payload.exp * 1000 < Date.now() : true}
     } catch (error) {
-        return {valid: false, expired: true};
+        console.error(error, ' Error token decode');
+        return {expired: true};
     }
 }
