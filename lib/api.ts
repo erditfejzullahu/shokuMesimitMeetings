@@ -1,16 +1,17 @@
-import { getAccessToken, getRefreshToken, storeTokens, clearTokens, isTokenExpired  } from "./auth/auth";
+import { redirect } from "next/navigation";
+import { getAccessToken, getRefreshToken, setAuthCookies, isTokenExpired, clearAuthCookies  } from "./auth/auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
-    let accessToken = getAccessToken();
-    let refreshToken = getRefreshToken();
+    let accessToken = await getAccessToken();
+    let refreshToken = await getRefreshToken();
     
     if(!accessToken || !refreshToken){
         return fetch(`${API_BASE_URL}${endpoint}`, options);
     }
 
-    const isTokenExpiredOrInvalid = isTokenExpired(accessToken);
+    const isTokenExpiredOrInvalid = await isTokenExpired(accessToken);
 
     if(isTokenExpiredOrInvalid.expired){
         try {
@@ -25,17 +26,15 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}): Pr
 
             if(refreshResponse.ok){
                 const tokens = await refreshResponse.json();
-                storeTokens(tokens.data.accessToken, tokens.data.refreshToken);
+                setAuthCookies({accessToken: tokens.data.accessToken, refreshToken: tokens.data.refreshToken})
                 accessToken = tokens.data.accessToken;
             }else{
-                clearTokens();
-                window.location.href = '/login';
-                throw new Error("Session expired. Login again");
+                await clearAuthCookies()
+                redirect('/login')
             }
         } catch (error) {
-            clearTokens();
-            window.location.href = "/login"
-            throw error;
+            await clearAuthCookies()
+            redirect('/login')
         }
     }
 

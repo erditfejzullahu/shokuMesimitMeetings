@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         pathname: '/**'
       }
     ]
+  },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', '2xd0xqpd-3000.euw.devtunnels.ms']
+    }
   }
 };
 

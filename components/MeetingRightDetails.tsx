@@ -22,7 +22,7 @@ const MeetingRightDetails = () => {
         <FaCircleInfo size={20}/>
     </button>
     {informationsOpened && <div onClick={handleClose} className="fixed w-full h-full left-0 top-0" style={{background: "rgba(0,0,0,0.4)"}}>
-        <motion.div initial={{opacity: 0, y:20}} transition={{ duration: 0.5 }} animate={{opacity:1, y:0}} className="w-[80%] flex flex-col justify-between h-full bg-mob-primary border-l border-black-200 ml-auto max-w-[400px] shadow-2xl shadow-black">
+        <motion.div initial={{opacity: 0, y:20}} transition={{ duration: 0.5 }} animate={{opacity:1, y:0}} className="w-[80%] overflow-y-auto flex flex-col justify-between h-full bg-mob-primary border-l border-black-200 ml-auto max-w-[400px] shadow-2xl shadow-black">
           <div>
             <div className="p-4 relative w-fit mx-auto border-b border-black-200">
               <h2 className="font-semibold text-white text-xl text-center max-sm:text-lg">Detaje te takimit</h2>
