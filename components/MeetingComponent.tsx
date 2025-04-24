@@ -11,6 +11,7 @@ import Image from "next/image";
 import { getAccessToken } from '@/lib/auth/auth';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import LoadingComponent from './LoadingComponent';
+import ControlMeetingComponent from './ControlMeetingComponent';
 
 interface UserData extends User {
   socketId: string;
@@ -308,7 +309,6 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
         const audioTrack = localStream.getAudioTracks()[0];
         if (audioTrack) {
           const audioProducer = await sendTransport.produce({ track: audioTrack });
-          console.log(audioProducer.paused, ' asdjasuidhasudh');
           
           setAudioPaused(audioProducer.paused)
           producers.push(audioProducer);
@@ -441,14 +441,6 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
     }
   }
 
-
-  
-
-  useEffect(() => {
-    console.log(Object.keys(remoteStreams).length)
-    
-  }, [remoteStreams])
-
   const checkStreamsCss = () => {
     const streams = Object.keys(remoteStreams).length;
     if (streams > 45) return "grid-rows-6";
@@ -492,7 +484,7 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
   return (
     <div className="bg-mob-primary min-h-screen h-full w-screen relative">
       {/* Video Grid */}
-      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} !grid-rows-2 ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
+      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
         {/* Local video */}
         <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? 'w-full h-full' : ''} ${Object.keys(remoteStreams).length > 1 ? 'row-span-2' : ''}`}>
           <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? 'w-full' : ''}`}>
@@ -501,17 +493,18 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
               autoPlay
               playsInline
               muted
-              className={`${Object.keys(remoteStreams).length === 0 ? 'w-full h-full object-contain' : 'h-full absolute top-0 right-0 left-0 mx-auto object-contain'} rounded-xl ${videoStreamReady ? '' : 'invisible'}`}
+              className={`${Object.keys(remoteStreams).length === 0 ? 'h-fit mx-auto object-contain' : 'h-full absolute top-0 right-0 left-0 mx-auto object-contain'} rounded-xl ${videoStreamReady ? '' : 'invisible'}`}
             />
             {!videoStreamReady && (
               <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
                 {user?.profilePic ? (
                   <Image
                     src={user.profilePic}
-                    alt="Your avatar"
+                    alt={user.name}
                     width={200}
+                    priority={true}
                     height={200}
-                    className="rounded-full"
+                    className="rounded-full max-w-24"
                   />
                 ) : (
                   <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl">
@@ -529,9 +522,7 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
         
         {/* Remote videos */}
         {Object.entries(remoteStreams).map(([socketId, streams]) => {
-          const users = allUsers.find((test) => test.socketId === socketId);
-          console.log(allUsers,  ' ? ? ?? ?ASD? ');
-          console.log(streams, ' streams')
+          
           const userRemote = streams.user || allUsers.find(u => u.socketId === socketId)
           const displayName = userRemote 
             ? `${userRemote.name}` 
@@ -609,7 +600,7 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
       )}
 
       {/* Controls Bar */}
-      <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+      {/* <div className="fixed bottom-6 left-0 right-0 flex justify-center">
         <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
           <button 
             className={`${audioPaused ? 'bg-gray-700' : 'bg-mob-secondary'} hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} 
@@ -637,7 +628,8 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
             <FaCircleInfo size={20}/>
           </button>
         </div>
-      </div>
+      </div> */}
+      <ControlMeetingComponent audioPaused={audioPaused} videoStreamReady={videoStreamReady} screenProducer={screenProducer} toggleProducerAudio={toggleProducerAudio} toggleProducerVideo={toggleProducerVideo} stopScreenShare={stopScreenShare} toggleScreenShare={toggleScreenShare}/>
     </div>
   )
 }
