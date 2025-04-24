@@ -17,6 +17,7 @@ const [isLoading, setIsLoading] = useState(false);
 const [error, setError] = useState('');
 const [checkingAuth, setCheckingAuth] = useState(true)
 
+
 useEffect(() => {
   if(isLoggedIn){
     router.replace("/room")

@@ -8,16 +8,27 @@ import { io, Socket } from "socket.io-client";
 import * as mediasoupClient from "mediasoup-client";
 import RemoteVideo from "@/components/RemoteVideo";
 import Image from "next/image";
+import { getAccessToken } from '@/lib/auth/auth';
+import { useGlobalContext } from '@/context/GlobalProvider';
+import LoadingComponent from './LoadingComponent';
 
-const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
+interface UserData extends User {
+  socketId: string;
+}
+
+interface RemoteStreamWithUser {
+  video?: MediaStream
+  audio?: MediaStream
+  user?: UserData
+}
+
+const MeetingComponent = ({socket}: {socket: Socket}) => {
+  if(socket === null) return <LoadingComponent />
     
-    
-    
-    const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStreamReady, setVideoStreamReady] = useState(false);
-  const [remoteStreams, setRemoteStreams] = useState<Record<string, {video?: MediaStream, audio?: MediaStream}>>({});
-  // const [connectionStatus, setConnectionStatus] = useState("Disconnected");
-
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, RemoteStreamWithUser>>({})
+  const [allUsers, setAllUsers] = useState<UserData[]>([])
   const {setConnectionStatus} = useConnectionStatus()
 
   const [audioPaused, setAudioPaused] = useState<boolean | undefined>(true)
@@ -27,8 +38,13 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
   const [sendTransportState, setSendTransportState] = useState<mediasoupClient.types.Transport>()
 
   const deviceRef = useRef<mediasoupClient.types.Device>(null)
-  const socket = io("https://onlinemeet.hajt24.xyz", {query: {roomId: roomUrl}});
 
+  const {user} = useGlobalContext()
+  
+  useEffect(() => {
+    console.log(remoteStreams)
+  }, [remoteStreams])
+  
   useEffect(() => {
     let device: mediasoupClient.Device;
     let sendTransport: mediasoupClient.types.Transport;
@@ -37,6 +53,31 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
     const producers: mediasoupClient.types.Producer[] = [];
     const consumers: mediasoupClient.types.Consumer[] = [];
     const addedProducers = new Set<string>();
+    
+    
+    socket.on('user-connected', ({ user, allUsers }) => {
+      console.log('New user connected:', user)
+      setAllUsers(allUsers)
+      console.log(allUsers);
+      
+      // Update remote streams with user data if already exists
+      setRemoteStreams(prev => ({
+        ...prev,
+        [user.socketId]: {
+          ...prev[user.socketId],
+          user
+        }
+      }))
+    })
+
+    socket.on('user-disconnected', ({ socketId }) => {
+      setAllUsers(prev => prev.filter(u => u.socketId !== socketId))
+      setRemoteStreams(prev => {
+        const newStreams = { ...prev }
+        delete newStreams[socketId]
+        return newStreams
+      })
+    })
 
     const initializeMediasoup = async () => {
       try {
@@ -85,6 +126,7 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
 
         // Setup transport event handlers
         const setupTransport = (transport: mediasoupClient.types.Transport, type: string) => {
+          console.log("u thirrz")
           transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
             try {
               await new Promise<void>((resolve, reject) => {
@@ -109,7 +151,9 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
         };
 
         socket.emit("getProducers", async (producers: any[]) => {
-          for (const { producerId, socketId, kind } of producers) {
+          console.log(producers, ' producers');
+          
+          for (const { producerId, socketId, kind, user } of producers) {
             // same consume logic you already use
             if (addedProducers.has(producerId)) continue;
             addedProducers.add(producerId);
@@ -139,8 +183,10 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
                 const stream = new MediaStream([consumer.track]);
                 if (kind === "video") {
                   newStreams[socketId].video = stream;
+                  newStreams[socketId].user = user;
                 } else if (kind === "audio") {
                   newStreams[socketId].audio = stream;
+                  newStreams[socketId].user = user;
                 }
         
                 return newStreams;
@@ -174,7 +220,7 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
         });
 
         // Handle new producers from other clients
-        socket.on("newProducer", async ({ producerId, socketId, kind }) => {
+        socket.on("newProducer", async ({ producerId, socketId, kind, user }) => {
           if (addedProducers.has(producerId)) return;
           addedProducers.add(producerId);
 
@@ -199,7 +245,7 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
             setRemoteStreams(prev => {
               const newStreams = { ...prev };
               if (!newStreams[socketId]) {
-                newStreams[socketId] = {};
+                newStreams[socketId] = {user};
               }
               
               if (kind === "video") {
@@ -221,6 +267,8 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
             console.error("Consumer error:", err);
           }
         });
+
+        
 
         // Handle producer disconnections
         socket.on("producerClosed", ({ socketId }) => {
@@ -442,122 +490,156 @@ const MeetingComponent = ({roomUrl}: {roomUrl: string}) => {
   }
 
   return (
-    <>
-      <div className="bg-mob-primary min-h-screen h-full w-screen relative ">
-
-        {/* Video Grid */}
-        <div className={` max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} !grid-rows-2 ${Object.keys(remoteStreams).length === 0 ? "absolute h-full w-full" : "gap-4"}`}>
-          {/* Local video - larger when alone */}
-          <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? "w-full h-full" : ""} ${Object.keys(remoteStreams).length > 1 ? "row-span-2": ""}`}> {/* ANOTHER CHECK: IF ANOTHER ONE IS CLICKED IT HAS TO REMOVE ROW SPAN HERE AND OTHER STREAM HAS ROW-SPAN2 */}
-            <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? "w-full" : ""}`}> {/* 16:9 aspect ratio */}
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  // muted
-                  className={`${Object.keys(remoteStreams).length === 0 ? "w-full h-full object-contain" : "h-full absolute top-0 right-0 left-0 mx-auto  object-contain"}  rounded-xl ${videoStreamReady ? "" : "invisible"}`}
-                />
-                  {!videoStreamReady && <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
-                  <FaVideoSlash size={40} color="#fff"/>
-                  </div>}
-              <div className={`absolute bg-mob-oBlack bottom-3 left-3 bg-opacity-50 text-white px-4 py-1 rounded-md border border-black-200 shadow-xl shadow-black`}>
-              <span className="text-white font-medium">Ju</span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Remote videos */}
-          
-          {Object.entries(remoteStreams).map(([socketId, streams]) => (
-            <div 
-              key={socketId} 
-              className={`bg-mob-oBlack  w-auto h-auto border-black-200 border shadow-xl flex-1 shadow-black rounded-xl overflow-hidden`}> {/* if click make row-span-2 to show image clearly */}
-              <div className="relative h-full flex-1 my-auto flex items-center justify-center"> {/* 16:9 aspect ratio */}
-                {streams.video && (
-                  <RemoteVideo 
-                    stream={streams.video}
+    <div className="bg-mob-primary min-h-screen h-full w-screen relative">
+      {/* Video Grid */}
+      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} !grid-rows-2 ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
+        {/* Local video */}
+        <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? 'w-full h-full' : ''} ${Object.keys(remoteStreams).length > 1 ? 'row-span-2' : ''}`}>
+          <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? 'w-full' : ''}`}>
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`${Object.keys(remoteStreams).length === 0 ? 'w-full h-full object-contain' : 'h-full absolute top-0 right-0 left-0 mx-auto object-contain'} rounded-xl ${videoStreamReady ? '' : 'invisible'}`}
+            />
+            {!videoStreamReady && (
+              <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
+                {user?.profilePic ? (
+                  <Image
+                    src={user.profilePic}
+                    alt="Your avatar"
+                    width={200}
+                    height={200}
+                    className="rounded-full"
                   />
-                )}
-                {!streams.video && (
-                  <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
-                    <FaVideoSlash size={40} color="#fff"/>
+                ) : (
+                  <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl">
+                    {user?.name}
                   </div>
                 )}
+              </div>
+            )}
+            <div className="absolute bg-mob-oBlack bottom-3 left-3 bg-opacity-50 text-white px-4 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
+              <span className="text-white font-medium">You</span>
+              {audioPaused && ' (Muted)'}
+            </div>
+          </div>
+        </div>
+        
+        {/* Remote videos */}
+        {Object.entries(remoteStreams).map(([socketId, streams]) => {
+          const users = allUsers.find((test) => test.socketId === socketId);
+          console.log(allUsers,  ' ? ? ?? ?ASD? ');
+          console.log(streams, ' streams')
+          const userRemote = streams.user || allUsers.find(u => u.socketId === socketId)
+          const displayName = userRemote 
+            ? `${userRemote.name}` 
+            : `Participant ${socketId.slice(0, 4)}`
+
+          return (
+            <div 
+              key={socketId} 
+              className="bg-mob-oBlack w-auto h-auto border-black-200 border shadow-xl flex-1 shadow-black rounded-xl overflow-hidden"
+            >
+              <div className="relative h-full flex-1 my-auto flex items-center justify-center">
+                {streams.video ? (
+                  <RemoteVideo stream={streams.video} />
+                ) : (
+                  <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
+                    {userRemote?.profilePic ? (
+                      <Image 
+                        src={userRemote.profilePic}
+                        alt={displayName}
+                        width={200}
+                        height={200}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl">
+                        {userRemote?.name}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
+                  <span className="text-white font-medium">
+                    {displayName}
+                    {streams.audio === undefined && ' (Muted)'}
+                  </span>
+                </div>
+                
                 {streams.audio && (
                   <audio
                     autoPlay
-                    muted
-                    style={{position: "absolute"}}
                     playsInline
                     ref={(el) => {
-                      if(el && streams.audio) {
+                      if (el && streams.audio) {
                         el.srcObject = streams.audio
                       }
                     }}
                   />
                 )}
-                <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
-                  <span className="text-white font-medium">Participant {socketId.slice(0, 4)}</span>
-                </div>
               </div>
             </div>
-          ))}
+          )
+        })}
+      </div>
 
-          
-          
-          
-
-        </div>
-
-        {screenProducer && (
-            <div className="absolute m-auto flex-col z-50 left-0 right-0 bottom-0 top-0 w-[85%] h-[85%] bg-mob-oBlack border border-black-200 rounded-md p-4">
-              <div className="flex-1 h-[calc(100%-40px)]">
-              <video 
-                ref={screenVideoRef}
-                playsInline
-                muted
-                autoPlay
-                className="w-full h-full border object-contain"
-              />
-              </div>
-              <div className="">
-                <button onProgress={stopScreenShare} className="bg-mob-secondary cursor-pointer font-semibold w-full text-center m-auto items-center justify-center text-white flex flex-row rounded-b-sm px-4 py-2">
-                  Ndal ndarjen e ekranit
-                  <LuScreenShareOff size={24}/>
-                </button>
-              </div>
-            </div>
-          )}
-
-        {/* Controls Bar */}
-        <div className="fixed bottom-6 left-0 right-0 flex justify-center">
-          <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
-            <button className={`${audioPaused ? "bg-gray-700 " : "bg-mob-secondary"}  hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} onClick={toggleProducerAudio}>
-              {audioPaused ? (
-                <FaMicrophoneSlash size={20}/>
-              ) : (
-                <FaMicrophone size={20}/>
-              )}
-            </button>
-            <button className={`${videoStreamReady ? "bg-mob-secondary" : "bg-gray-700"} hover:bg-gray-600 cursor-pointer text-white p-3 rounded-full`} onClick={toggleProducerVideo}>
-              {videoStreamReady ? (
-                <FaVideo size={20}/>
-              ) : (
-                <FaVideoSlash size={20}/>
-              )}
-            </button>
-            <button onClick={screenProducer ? stopScreenShare : toggleScreenShare} className={`${screenProducer ? "bg-mob-secondary hover:bg-gray-700" : "bg-gray-700 hover:bg-mob-secondary"}  cursor-pointer font-medium  group text-white px-4 py-2 rounded-full flex items-center gap-1.5 flex-row`}>
-              {screenProducer ? "Ndalo Shperndarjen" : "Ndaj Ekranin"}
-              <LuScreenShare size={20} className={`${screenProducer ? "text-white group-hover:text-mob-secondary" : "text-mob-secondary group-hover:text-white"} `}/>
-            </button>
-            <button className="bg-gray-700 cursor-pointer hover:bg-gray-600 text-white p-3 rounded-full">
-              <FaCircleInfo size={20}/>
+      {/* Screen share overlay */}
+      {screenProducer && (
+        <div className="absolute m-auto flex-col z-50 left-0 right-0 bottom-0 top-0 w-[85%] h-[85%] bg-mob-oBlack border border-black-200 rounded-md p-4">
+          <div className="flex-1 h-[calc(100%-40px)]">
+            <video 
+              ref={screenVideoRef}
+              playsInline
+              muted
+              autoPlay
+              className="w-full h-full border object-contain"
+            />
+          </div>
+          <div className="">
+            <button onClick={stopScreenShare} className="bg-mob-secondary cursor-pointer font-semibold w-full text-center m-auto items-center justify-center text-white flex flex-row rounded-b-sm px-4 py-2">
+              Stop screen sharing
+              <LuScreenShareOff size={24}/>
             </button>
           </div>
         </div>
+      )}
+
+      {/* Controls Bar */}
+      <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+        <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
+          <button 
+            className={`${audioPaused ? 'bg-gray-700' : 'bg-mob-secondary'} hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} 
+            onClick={toggleProducerAudio}
+          >
+            {audioPaused ? <FaMicrophoneSlash size={20}/> : <FaMicrophone size={20}/>}
+          </button>
+          
+          <button 
+            className={`${videoStreamReady ? 'bg-mob-secondary' : 'bg-gray-700'} hover:bg-gray-600 cursor-pointer text-white p-3 rounded-full`} 
+            onClick={toggleProducerVideo}
+          >
+            {videoStreamReady ? <FaVideo size={20}/> : <FaVideoSlash size={20}/>}
+          </button>
+          
+          <button 
+            onClick={screenProducer ? stopScreenShare : toggleScreenShare} 
+            className={`${screenProducer ? 'bg-mob-secondary hover:bg-gray-700' : 'bg-gray-700 hover:bg-mob-secondary'} cursor-pointer font-medium group text-white px-4 py-2 rounded-full flex items-center gap-1.5 flex-row`}
+          >
+            {screenProducer ? 'Stop Sharing' : 'Share Screen'}
+            <LuScreenShare size={20} className={`${screenProducer ? 'text-white group-hover:text-mob-secondary' : 'text-mob-secondary group-hover:text-white'}`}/>
+          </button>
+          
+          <button className="bg-gray-700 cursor-pointer hover:bg-gray-600 text-white p-3 rounded-full">
+            <FaCircleInfo size={20}/>
+          </button>
+        </div>
       </div>
-    </>
-  );
+    </div>
+  )
 }
 
 export default MeetingComponent

@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import React from 'react'
 
-const page = () => {
+const Page = () => {
   return (
     redirect('/')
   )
 }
 
-export default page
+export default Page
