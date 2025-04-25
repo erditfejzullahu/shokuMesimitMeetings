@@ -48,6 +48,14 @@ const instructors: Instructor[] = [
     image: "/instructor4.jpg",
     rating: 4.9
   },
+  {
+    id: 5,
+    name: "Prof. David Kim",
+    expertise: "Cybersecurity",
+    bio: "Former security consultant with numerous certifications.",
+    image: "/instructor4.jpg",
+    rating: 4.9
+  },
 ];
 
 export default function InstructorsSlider() {
@@ -57,14 +65,14 @@ export default function InstructorsSlider() {
       <Swiper
         {...swiperConfig}
         modules={[Pagination, Autoplay]}
-        autoplay={{ delay: 3000 }}
+        autoplay={{ delay: 4000 }}
         className="pb-12"
       >
         {instructors.map((instructor) => (
-          <SwiperSlide key={instructor.id}>
+          <SwiperSlide key={instructor.id} className="pl-4">
             <motion.div 
               whileHover={{ scale: 1.03 }}
-              className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-5 shadow-black h-full flex flex-col"
+              className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-4 shadow-black h-full flex flex-col "
             >
               <div className="flex items-center mb-4">
                 <div className="w-16 h-16 rounded-full border-4 border-mob-secondary overflow-hidden mr-4">
