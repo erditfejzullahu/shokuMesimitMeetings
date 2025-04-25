@@ -1,8 +1,13 @@
 "use client"
 import { useConnectionStatus } from '@/context/ConnectionContext'
 import React from 'react'
+import { usePathname } from 'next/navigation'
 
 const ConnectionStatus = () => {
+  const pathname = usePathname();
+  if(!pathname.includes('/room')){
+    return null;
+  }
     const {connectionStatus} = useConnectionStatus()
   return (
     <div className={`p-3 animate-pulse rounded-full ${

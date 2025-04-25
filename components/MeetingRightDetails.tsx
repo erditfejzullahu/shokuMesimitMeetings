@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FaCircleInfo } from 'react-icons/fa6'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -9,6 +9,15 @@ import { motion } from 'framer-motion';
 const MeetingRightDetails = () => {
   const [informationsOpened, setInformationsOpened] = useState(false)
   const router = useRouter();
+  
+  useEffect(() => {
+    if(informationsOpened){
+      document.body.style.overflowY = "hidden"
+    }else{
+      document.body.style.overflowY = "auto"
+    }
+  }, [informationsOpened])
+  
 
   const handleClose = (e: React.MouseEvent) => {
     if(e.target === e.currentTarget){
@@ -22,7 +31,7 @@ const MeetingRightDetails = () => {
         <FaCircleInfo size={20}/>
     </button>
     {informationsOpened && <div onClick={handleClose} className="fixed w-full h-full left-0 top-0" style={{background: "rgba(0,0,0,0.4)"}}>
-        <motion.div initial={{opacity: 0, y:20}} transition={{ duration: 0.5 }} animate={{opacity:1, y:0}} className="w-[80%] overflow-y-auto flex flex-col justify-between h-full bg-mob-primary border-l border-black-200 ml-auto max-w-[400px] shadow-2xl shadow-black">
+        <motion.div initial={{opacity: 0, y:0, x:50}} transition={{ duration: 0.5 }} animate={{opacity:1, y:0, x:0}} className="w-[80%] overflow-y-auto flex flex-col justify-between h-full bg-mob-primary border-l border-black-200 ml-auto max-w-[400px] shadow-2xl shadow-black">
           <div>
             <div className="p-4 relative w-fit mx-auto border-b border-black-200">
               <h2 className="font-semibold text-white text-xl text-center max-sm:text-lg">Detaje te takimit</h2>
@@ -58,7 +67,7 @@ const MeetingRightDetails = () => {
           </div>
           <div className="p-4 ml-auto">
             <button 
-              onClick={() => router.replace('/room')}
+              onClick={() => router.replace('/')}
               className="border-2 font-semibold border-white px-4 py-2 rounded-md cursor-pointer bg-mob-oBlack hover:bg-mob-secondary transition-all duration-100 ease-in-out"
             >
               Dilni

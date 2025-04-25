@@ -1,3 +1,4 @@
+"use server"
 import { redirect } from "next/navigation";
 import { getAccessToken, getRefreshToken, setAuthCookies, isTokenExpired, clearAuthCookies  } from "./auth/auth";
 
@@ -5,6 +6,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const apiClient = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
     let accessToken = await getAccessToken();
+    
     let refreshToken = await getRefreshToken();
     
     if(!accessToken || !refreshToken){
@@ -12,7 +14,8 @@ export const apiClient = async (endpoint: string, options: RequestInit = {}): Pr
     }
 
     const isTokenExpiredOrInvalid = await isTokenExpired(accessToken);
-
+    console.log(isTokenExpiredOrInvalid, ' expired or not');
+    
     if(isTokenExpiredOrInvalid.expired){
         try {
             const refreshResponse = await fetch(`${API_BASE_URL}/api/Users/refresh`, {

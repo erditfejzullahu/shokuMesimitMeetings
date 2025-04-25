@@ -3,18 +3,23 @@ import { startTransition, useActionState, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import { getAccessToken, isTokenExpired } from '@/lib/auth/auth';
-import { redirect, useRouter } from 'next/navigation';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import LoadingComponent from './LoadingComponent';
-import { loginAction } from '@/lib/auth/login';
+import { loginAction } from '@/lib/actions/login';
 import {useForm} from "react-hook-form"
 import {zodResolver} from '@hookform/resolvers/zod'
 import { loginSchema } from '@/lib/schemas/login-shcema';
 import { useFormState } from 'react-dom';
+import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 const LoginForm = () => {
-const [showPassword, setShowPassword] = useState(false);
-const [state, formAction] = useActionState(loginAction, {});
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl")
+  
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [state, formAction] = useActionState(loginAction, {success: false});
 
   const {register, handleSubmit, formState: {errors: clientErrors, isSubmitting}, setError} = useForm({resolver: zodResolver(loginSchema), mode: "onChange"})
 
@@ -27,7 +32,16 @@ const [state, formAction] = useActionState(loginAction, {});
         })
       })
     }
-  }, [state, setError])
+    if(state.success && state.redirectTo){
+      if(callbackUrl){
+        console.log("qitu")
+        const callback = decodeURIComponent(callbackUrl)
+        router.push(callback)
+      }else{
+        router.push(state.redirectTo)
+      }
+    }
+  }, [state, setError, router])
 
   const onSubmit = handleSubmit((data, e) => {
     console.log(e?.target);
@@ -155,7 +169,7 @@ const [state, formAction] = useActionState(loginAction, {});
                 disabled={isSubmitting}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full cursor-pointer flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? (
                   <span className="flex items-center">

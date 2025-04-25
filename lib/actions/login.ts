@@ -3,14 +3,16 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { loginSchema, type LoginFormData } from "../schemas/login-shcema"
-import { setAuthCookies } from "./auth"
+import { setAuthCookies } from "../auth/auth"
 
 export type LoginState = {
     errors?: {
         username?: string[];
         password?: string[];
     };
-    message?: string | null
+    message?: string | null;
+    success: boolean;
+    redirectTo?: string;
 }
 
 export const loginAction = async (prevState: LoginState, formData: FormData): Promise<LoginState> => {
@@ -22,7 +24,8 @@ export const loginAction = async (prevState: LoginState, formData: FormData): Pr
     if(!validatedFields.success){
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: "Fusha te pambushura apo invalide"
+            message: "Fusha te pambushura apo invalide",
+            success: false,
         }
     }
 
@@ -34,7 +37,7 @@ export const loginAction = async (prevState: LoginState, formData: FormData): Pr
             body: JSON.stringify({username, password})
         })
         const data = await res.json();
-        if(data.message === "Login incorrect!") return {message: "Te dhenat tuaja jane gabim!"}
+        if(data.message === "Login incorrect!") return {message: "Te dhenat tuaja jane gabim!", success: false}
         const {accessToken, refreshToken} = data.token;
 
         await setAuthCookies(data.token)
@@ -52,11 +55,13 @@ export const loginAction = async (prevState: LoginState, formData: FormData): Pr
         //     sameSite: 'lax',
         //     maxAge: 60 * 60 * 24 * 7
         // })
-
-        redirect('/room')
+        return {
+            success: true,
+            redirectTo: "/room"
+        }
 
     } catch (error) {
         console.error('login error', error);
-        return {message: "Dicka shkoi gabim."}
+        return {message: "Dicka shkoi gabim.", success: false}
     }
 }

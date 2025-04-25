@@ -1,14 +1,14 @@
 "use server"
 import { cookies } from "next/headers";
-import { decodeJwt } from "jose";
+import { decodeJwt, JWTPayload } from "jose";
 
 export async function getSession() {
-    const token = (await cookies()).get('ACCESS_TOKEN')?.value;
+    const token = (await cookies()).get('accessToken')?.value;
 
     if(!token) return null;
 
     try {
-        const payload = decodeJwt(token);
+        const payload = decodeJwt(token) as CustomJwtClaims;
         return {
             user: {
                 id: payload.sub,
@@ -16,7 +16,8 @@ export async function getSession() {
                 username: payload.Username,
                 role: payload.Role,
                 email: payload.Email,
-                profilePicture: payload.ProfilePicture
+                profilePicture: payload.ProfilePicture,
+                token: token
             },
             expires: new Date(payload.exp! * 1000)
         }

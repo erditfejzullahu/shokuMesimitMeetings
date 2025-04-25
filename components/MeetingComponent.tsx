@@ -496,10 +496,10 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
               className={`${Object.keys(remoteStreams).length === 0 ? 'h-fit mx-auto object-contain' : 'h-full absolute top-0 right-0 left-0 mx-auto object-contain'} rounded-xl ${videoStreamReady ? '' : 'invisible'}`}
             />
             {!videoStreamReady && (
-              <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
-                {user?.profilePic ? (
+              <div className="absolute h-full left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
+                {user?.profilePicture ? (
                   <Image
-                    src={user.profilePic}
+                    src={user.profilePicture}
                     alt={user.name}
                     width={200}
                     priority={true}
@@ -538,9 +538,9 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
                   <RemoteVideo stream={streams.video} />
                 ) : (
                   <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
-                    {userRemote?.profilePic ? (
+                    {userRemote?.profilePicture ? (
                       <Image 
-                        src={userRemote.profilePic}
+                        src={userRemote.profilePicture}
                         alt={displayName}
                         width={200}
                         height={200}

@@ -8,6 +8,8 @@ export const fetchUserData = async () => {
             return null; 
         }
         const data = await response.json();
+        console.log(data, ' data conteksti');
+        
         if(!response.ok){
             console.log("sosht ok");
             
@@ -18,5 +20,4 @@ export const fetchUserData = async () => {
         console.error(error);
         return null;
     }
-    
 }

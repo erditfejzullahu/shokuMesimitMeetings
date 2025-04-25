@@ -4,12 +4,12 @@ import { io, Socket } from 'socket.io-client';
 import MeetingComponent from './MeetingComponent';
 import { getAccessToken } from '@/lib/auth/auth';
 import LoadingComponent from './LoadingComponent';
+import { JWTPayload } from 'jose';
 
-const SocketConnection = ({ roomUrl }: { roomUrl: string }) => {
+const SocketConnection = ({ roomUrl, session }: { roomUrl: string, session: Session }) => {
     const socketRef = useRef<Socket | null>(null); // Ref to keep socket instance across renders
     const [isConnected, setIsConnected] = useState(false); // State for connection status
-    const token = getAccessToken();
-
+    const token = session.user.token
     useEffect(() => {
         // Check if socket already exists to avoid recreation
         if (!socketRef.current) {

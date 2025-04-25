@@ -13,6 +13,9 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "ShokuMesimit - Mbledhja Online",
   description: "Mbledhje ne mes te studenteve dhe instruktorit.",
+  icons: {
+    icon: "/favicon.png"
+  }
 };
 
 export default function RootLayout({
@@ -22,6 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+      <link rel="icon" type="image/png" href="/favicon.png" />
+      </head>
       <body
         className={`${montserrat.className} antialiased`}
       >
