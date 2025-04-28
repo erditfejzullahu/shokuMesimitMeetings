@@ -8,19 +8,19 @@ import { getSession } from '@/lib/auth/session';
 const Page = async ({params}: {params: {roomUrl: string}}) => {
   const {roomUrl} = await params;
   const session = await getSession();
-  // if(!session){
-  //   redirect('/login')
-  // } 
-  // const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/OnlineMeetings/GetMeetingInformtions/${roomUrl}`, {method: "GET"})
-  // if(!response.ok){
-  //   redirect('/404')
-  // }
-  // const meetingDetails = await response.json();
+  if(!session){
+    redirect('/login')
+  } 
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/OnlineMeetings/GetMeetingInformtions/${roomUrl}`, {method: "GET"})
+  if(!response.ok){
+    redirect('/404')
+  }
+  const meetingDetails = await response.json();
   return (
     <>
-      <Header meetingDetails={null}/>
+      <Header meetingDetails={meetingDetails}/>
       {/* <MeetingComponent roomUrl={roomUrl}/> */}
-      <SocketConnection roomUrl={roomUrl} session={session!}/>
+      <SocketConnection roomUrl={roomUrl} session={session}/>
     </>
   )
 }

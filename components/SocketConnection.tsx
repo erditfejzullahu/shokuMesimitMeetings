@@ -5,8 +5,12 @@ import MeetingComponent from './MeetingComponent';
 import { getAccessToken } from '@/lib/auth/auth';
 import LoadingComponent from './LoadingComponent';
 import { JWTPayload } from 'jose';
+import { logout } from '@/lib/actions/logout';
+import { useRouter } from 'next/router';
+import { toast } from 'sonner';
 
 const SocketConnection = ({ roomUrl, session }: { roomUrl: string, session: Session }) => {
+    const router = useRouter();
     const socketRef = useRef<Socket | null>(null); // Ref to keep socket instance across renders
     const [isConnected, setIsConnected] = useState(false); // State for connection status
     const token = session.user.token
@@ -29,8 +33,29 @@ const SocketConnection = ({ roomUrl, session }: { roomUrl: string, session: Sess
             setIsConnected(true);
         });
 
-        newSocket.on("connect_error", (err) => {
+        newSocket.on("connect_error", async (err) => {
             console.error("❌ Connection error:", err.message);
+            if(err.message === "Error: Token has expired. Please login!"){
+                await logout();
+                router.replace('/login')
+            }else if(err.message === "Unauthorized: Not authenticated"){
+                await logout();
+                router.replace('/login')
+            }else if(err.message === "Error: Something went wrong"){
+                toast("Dicka shkoi gabim", {
+                    description: "Ju lutem provoni perseri veprimin e njejte!",
+                    dismissible: true
+                })
+            }else if(err.message === "Not allowed"){
+                toast("Nuk jeni te lejuar te kyceni ne dhome", {
+                    description: "Per tu bere student i instruktorit klikoni butonin e ngjitur!",
+                    action: {
+                        label: "Behuni Student",
+                        onClick: () => console.log("Behuni studente funksioni")
+                    }
+                })
+            }
+
             setIsConnected(false); // Set false on error
         });
 

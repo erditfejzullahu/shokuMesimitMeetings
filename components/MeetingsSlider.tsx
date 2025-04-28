@@ -72,6 +72,7 @@ export default function MeetingsSlider() {
       <h2 className="text-2xl font-normal text-white">Mbledhjet Online</h2>
       <Swiper
         {...swiperConfig}
+        
         modules={[Pagination, Autoplay]}
         autoplay={{ delay: 3500 }}
         className="pb-12"

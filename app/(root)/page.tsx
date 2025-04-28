@@ -11,7 +11,7 @@ const Page = () => {
   return (
     <>
     <Header meetingDetails={null}/>
-    <section className="flex flex-row max-w-screen overflow-hidden">
+    <section className="flex flex-row max-w-screen overflow-hidden shadow-xl" >
       <SwiperInformationRower 
         parentStyle={null}
         title='Behuni instruktor'
@@ -25,7 +25,7 @@ const Page = () => {
     <section>
       <MeetingsSlider />
     </section>
-    <section className="flex flex-row-reverse max-w-screen overflow-hidden">
+    <section className="flex flex-row-reverse max-w-screen overflow-hidden" >
       <SwiperInformationRower 
         parentStyle={"!mr-4 !ml-0"}
         title='Behuni studente'

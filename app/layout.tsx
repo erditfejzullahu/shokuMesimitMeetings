@@ -3,6 +3,7 @@ import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ConnectionProvider } from "@/context/ConnectionContext";
 import GlobalProvider from "@/context/GlobalProvider";
+import { Toaster } from "sonner";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <GlobalProvider>
         <ConnectionProvider>
           {children}
+          <Toaster expand />
         </ConnectionProvider>
         </GlobalProvider>
       </body>

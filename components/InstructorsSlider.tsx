@@ -72,8 +72,10 @@ export default function InstructorsSlider() {
           <SwiperSlide key={instructor.id} className="pl-4">
             <motion.div 
               whileHover={{ scale: 1.03 }}
-              className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-4 shadow-black h-full flex flex-col "
+              className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-4 shadow-black h-full flex flex-col relative"
             >
+              <span className="absolute right-0 top-0 text-white font-semibold text-xs bg-mob-primary border-l-2 border-b-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">10</span> Kurse</span>
+              <span className="absolute left-0 bottom-0 text-white font-semibold text-xs bg-mob-primary border-t-2 border-r-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">200</span> Studente</span>
               <div className="flex items-center mb-4">
                 <div className="w-16 h-16 rounded-full border-4 border-mob-secondary overflow-hidden mr-4">
                   <img 
