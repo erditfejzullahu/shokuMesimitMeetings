@@ -6,10 +6,11 @@ import { getAccessToken } from '@/lib/auth/auth';
 import LoadingComponent from './LoadingComponent';
 import { JWTPayload } from 'jose';
 import { logout } from '@/lib/actions/logout';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { addNewStudent } from '@/lib/actions/actions';
 
-const SocketConnection = ({ roomUrl, session }: { roomUrl: string, session: Session }) => {
+const SocketConnection = ({ roomUrl, session, meetingDetails }: { roomUrl: string, session: Session, meetingDetails: MeetingHeaderDetails }) => {
     const router = useRouter();
     const socketRef = useRef<Socket | null>(null); // Ref to keep socket instance across renders
     const [isConnected, setIsConnected] = useState(false); // State for connection status
@@ -51,7 +52,21 @@ const SocketConnection = ({ roomUrl, session }: { roomUrl: string, session: Sess
                     description: "Per tu bere student i instruktorit klikoni butonin e ngjitur!",
                     action: {
                         label: "Behuni Student",
-                        onClick: () => console.log("Behuni studente funksioni")
+                        onClick: async () => {
+                            const response = await addNewStudent(meetingDetails, parseInt(session.user.id))
+                            if(response === 1){
+                                toast.success("Sukses!", {
+                                    description: "Sapo u bete student te instruktorit! Tani mund te ndiqni ligjeratat online."
+                                })
+                                setTimeout(() => {
+                                    router.refresh();
+                                }, 500);
+                            }else{
+                                toast.error("Dicka shkoi gabim", {
+                                    description: "Ju lutem provoni perseri, apo kontaktoni Panelin e Ndihmes!",
+                                })
+                            }
+                        } 
                     }
                 })
             }

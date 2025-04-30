@@ -19,7 +19,7 @@ const LoginForm = () => {
   
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [state, formAction] = useActionState(loginAction, {success: false});
+  const [state, formAction, isPending] = useActionState(loginAction, {success: false});
 
   const {register, handleSubmit, formState: {errors: clientErrors, isSubmitting}, setError} = useForm({resolver: zodResolver(loginSchema), mode: "onChange"})
 
@@ -166,12 +166,12 @@ const LoginForm = () => {
             <div>
               <motion.button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isPending}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className={`w-full cursor-pointer flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
-                {isSubmitting ? (
+                {(isSubmitting || isPending) ? (
                   <span className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

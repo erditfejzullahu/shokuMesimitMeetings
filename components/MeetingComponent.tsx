@@ -12,6 +12,7 @@ import { getAccessToken } from '@/lib/auth/auth';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import LoadingComponent from './LoadingComponent';
 import ControlMeetingComponent from './ControlMeetingComponent';
+import { toast } from 'sonner';
 
 interface UserData extends User {
   socketId: string;
@@ -56,7 +57,7 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
     const addedProducers = new Set<string>();
     
     
-    socket.on('user-connected', ({ user, allUsers }) => {
+    socket.on('user-connected', ({ user, allUsers } : {user: UserData, allUsers: UserData[]}) => {
       console.log('New user connected:', user)
       setAllUsers(allUsers)
       console.log(allUsers);
@@ -69,6 +70,13 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
           user
         }
       }))
+
+      toast(`${user.name} u fut ne dhome!`, {
+        dismissible: true
+      })
+
+      
+      
     })
 
     socket.on('user-disconnected', ({ socketId }) => {

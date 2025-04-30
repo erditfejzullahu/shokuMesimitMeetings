@@ -9,17 +9,17 @@ interface User {
 }
 
 interface MeetingHeaderDetails {
-    meetingDetails: {
-      id: number;
-      intructor: string;
-      title: string;
-      description: string;
-      scheduleDateTime: string;
-      durationTime?: string;
-      status: string;
-      course: string;
-      lesson: string;
-    }
+    id: number;
+    intructor: string;
+    instructorId: number;
+    title: string;
+    description: string;
+    scheduleDateTime: string;
+    durationTime?: string;
+    status: string;
+    course: string;
+    courseId: number;
+    lesson: string;
 }
 
 interface CustomJwtClaims { 

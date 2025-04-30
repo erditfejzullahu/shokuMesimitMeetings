@@ -10,6 +10,7 @@ interface HeaderProps {
 }
 const Header = ({meetingDetails}: HeaderProps) => {
   // if(!meetingDetails) return null;
+  
   return (
     <header className="flex justify-between items-center h-[65px]  bg-mob-oBlack shadow-lg shadow-black p-4">
         <Link href={"/"}><Image src={"/assets/images/logo.png"} width={100} height={50} alt='logo' className="h-12 w-fit"/></Link>

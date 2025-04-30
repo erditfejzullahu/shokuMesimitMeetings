@@ -20,7 +20,7 @@ const Page = async ({params}: {params: {roomUrl: string}}) => {
     <>
       <Header meetingDetails={meetingDetails}/>
       {/* <MeetingComponent roomUrl={roomUrl}/> */}
-      <SocketConnection roomUrl={roomUrl} session={session}/>
+      <SocketConnection roomUrl={roomUrl} session={session} meetingDetails={meetingDetails}/>
     </>
   )
 }
