@@ -27,6 +27,7 @@ interface RemoteStreamWithUser {
 
 const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDetails: MeetingHeaderDetails}) => {
   if(socket === null) return <LoadingComponent />
+  
     
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStreamReady, setVideoStreamReady] = useState(false);
@@ -61,11 +62,9 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
             credentials: "include"
           })
           if(!response.ok){
-            if(window.ReactNativeWebView){
-              window.ReactNativeWebView.postMessage(
+              window.ReactNativeWebView?.postMessage(
                 JSON.stringify({type: "ERROR", message: "Failed to set tokens"})
               )
-            }
           }else{
             window.ReactNativeWebView?.postMessage(
               JSON.stringify({type: "SUCCESS", message: "Tokens set successfully"})

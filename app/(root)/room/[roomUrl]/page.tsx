@@ -10,8 +10,8 @@ const Page = async ({params}: {params: {roomUrl: string}}) => {
   const session = await getSession();
   if(!session){
     redirect('/login')
-  } 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/OnlineMeetings/GetMeetingInformtions/${roomUrl}`, {method: "GET"})
+  }
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/OnlineMeetings/GetMeetingInformations/${roomUrl}`, {method: "GET"})
   if(!response.ok){
     redirect('/404')
   }

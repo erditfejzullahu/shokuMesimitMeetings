@@ -23,6 +23,20 @@ const LoginForm = () => {
 
   const {register, handleSubmit, formState: {errors: clientErrors, isSubmitting}, setError} = useForm({resolver: zodResolver(loginSchema), mode: "onChange"})
 
+  const getSafeRedirectUrl = (url: string) => {
+    if (!url) return '/';
+    // Ensure the URL is from the same origin
+    try {
+      const parsed = new URL(url, window.location.origin);
+      if (parsed.origin === window.location.origin) {
+        return parsed.pathname + parsed.search;
+      }
+    } catch (e) {
+      console.error("Invalid callback URL:", url);
+    }
+    return '/';
+  };
+
   useEffect(() => {
     if(state.errors){
       Object.entries(state.errors).forEach(([field, messages]) => {
@@ -32,16 +46,14 @@ const LoginForm = () => {
         })
       })
     }
-    if(state.success && state.redirectTo){
-      if(callbackUrl){
-        console.log("qitu")
-        const callback = decodeURIComponent(callbackUrl)
-        router.push(callback)
-      }else{
-        router.push(state.redirectTo)
-      }
+    if (state.success && state.redirectTo) {
+      const urlToRedirect = callbackUrl 
+      ? getSafeRedirectUrl(decodeURIComponent(callbackUrl))
+      : state.redirectTo;
+      
+      router.replace(urlToRedirect);
     }
-  }, [state, setError, router])
+  }, [state, setError, router, callbackUrl])
 
   const onSubmit = handleSubmit((data, e) => {
     console.log(e?.target);
