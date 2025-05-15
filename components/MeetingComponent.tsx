@@ -49,40 +49,40 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
     console.log(remoteStreams)
   }, [remoteStreams])
   
-  useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data);
-        if(data?.type === "SET_TOKENS"){
-          const {accessToken, refreshToken} = data;
-          const response = await fetch(`${process.env.NEXT_PUBLIC_FORWARDED_URL}/api/native-tokens`, {
-            method: "POST",
-            headers: {'Content-Type': "application/json"},
-            body: JSON.stringify({accessToken, refreshToken}),
-            credentials: "include"
-          })
-          if(!response.ok){
-              window.ReactNativeWebView?.postMessage(
-                JSON.stringify({type: "ERROR", message: "Failed to set tokens"})
-              )
-          }else{
-            window.ReactNativeWebView?.postMessage(
-              JSON.stringify({type: "SUCCESS", message: "Tokens set successfully"})
-            )
-          }
-        }
-      } catch (error) {
-        console.error("Invalid message format:", error)
-        window.ReactNativeWebView?.postMessage(
-          JSON.stringify({ type: 'ERROR', message: 'Invalid message format' })
-        );
-      }
-    }
+  // useEffect(() => {
+  //   const handleMessage = async (event: MessageEvent) => {
+  //     try {
+  //       const data = JSON.parse(event.data);
+  //       if(data?.type === "SET_TOKENS"){
+  //         const {accessToken, refreshToken} = data;
+  //         const response = await fetch(`${process.env.NEXT_PUBLIC_FORWARDED_URL}/api/native-tokens`, {
+  //           method: "POST",
+  //           headers: {'Content-Type': "application/json"},
+  //           body: JSON.stringify({accessToken, refreshToken}),
+  //           credentials: "include"
+  //         })
+  //         if(!response.ok){
+  //             window.ReactNativeWebView?.postMessage(
+  //               JSON.stringify({type: "ERROR", message: "Failed to set tokens"})
+  //             )
+  //         }else{
+  //           window.ReactNativeWebView?.postMessage(
+  //             JSON.stringify({type: "SUCCESS", message: "Tokens set successfully"})
+  //           )
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Invalid message format:", error)
+  //       window.ReactNativeWebView?.postMessage(
+  //         JSON.stringify({ type: 'ERROR', message: 'Invalid message format' })
+  //       );
+  //     }
+  //   }
 
-    window.addEventListener('message', handleMessage);
+  //   window.addEventListener('message', handleMessage);
 
-    return () => window.removeEventListener('message', handleMessage);
-  }, [])
+  //   return () => window.removeEventListener('message', handleMessage);
+  // }, [])
   
 
   useEffect(() => {
@@ -158,22 +158,22 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
             urls: ['stun:158.101.170.230:3478']
           },
           {
-            urls: ['stun.l.google.com:19302']
+            urls: ['stun:stun.l.google.com:19302']
           },
           {
-            urls: ['stun1.l.google.com:19302']
+            urls: ['stun:stun1.l.google.com:19302']
           },
           {
-            urls: ['stun2.l.google.com:19302']
+            urls: ['stun:stun2.l.google.com:19302']
           },
           {
-            urls: ['stun3.l.google.com:19302']
+            urls: ['stun:stun3.l.google.com:19302']
           },
           {
-            urls: ['stun4.l.google.com:19302']
+            urls: ['stun:stun4.l.google.com:19302']
           },
           {
-            urls: ['stun.cloudflare.com:3478']
+            urls: ['stun:stun.cloudflare.com:3478']
           },
         ];
 
