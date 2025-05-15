@@ -93,7 +93,7 @@ const SocketConnection = ({ roomUrl, session, meetingDetails }: { roomUrl: strin
     // Show Loading until connected
 
 
-    return <MeetingComponent socket={socketRef.current!} />;
+    return <MeetingComponent socket={socketRef.current!} meetingDetails={meetingDetails}/>;
 };
 
 export default SocketConnection;

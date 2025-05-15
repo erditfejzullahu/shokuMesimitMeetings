@@ -13,6 +13,7 @@ import { useGlobalContext } from '@/context/GlobalProvider';
 import LoadingComponent from './LoadingComponent';
 import ControlMeetingComponent from './ControlMeetingComponent';
 import { toast } from 'sonner';
+import { participantJoined } from '@/lib/actions/actions';
 
 interface UserData extends User {
   socketId: string;
@@ -24,7 +25,7 @@ interface RemoteStreamWithUser {
   user?: UserData
 }
 
-const MeetingComponent = ({socket}: {socket: Socket}) => {
+const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDetails: MeetingHeaderDetails}) => {
   if(socket === null) return <LoadingComponent />
     
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -48,6 +49,44 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
   }, [remoteStreams])
   
   useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if(data?.type === "SET_TOKENS"){
+          const {accessToken, refreshToken} = data;
+          const response = await fetch(`${process.env.NEXT_PUBLIC_FORWARDED_URL}/api/native-tokens`, {
+            method: "POST",
+            headers: {'Content-Type': "application/json"},
+            body: JSON.stringify({accessToken, refreshToken}),
+            credentials: "include"
+          })
+          if(!response.ok){
+            if(window.ReactNativeWebView){
+              window.ReactNativeWebView.postMessage(
+                JSON.stringify({type: "ERROR", message: "Failed to set tokens"})
+              )
+            }
+          }else{
+            window.ReactNativeWebView?.postMessage(
+              JSON.stringify({type: "SUCCESS", message: "Tokens set successfully"})
+            )
+          }
+        }
+      } catch (error) {
+        console.error("Invalid message format:", error)
+        window.ReactNativeWebView?.postMessage(
+          JSON.stringify({ type: 'ERROR', message: 'Invalid message format' })
+        );
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, [])
+  
+
+  useEffect(() => {
     let device: mediasoupClient.Device;
     let sendTransport: mediasoupClient.types.Transport;
     let recvTransport: mediasoupClient.types.Transport;
@@ -57,7 +96,7 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
     const addedProducers = new Set<string>();
     
     
-    socket.on('user-connected', ({ user, allUsers } : {user: UserData, allUsers: UserData[]}) => {
+    socket.on('user-connected', async ({ user, allUsers } : {user: UserData, allUsers: UserData[]}) => {
       console.log('New user connected:', user)
       setAllUsers(allUsers)
       console.log(allUsers);
@@ -75,8 +114,17 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
         dismissible: true
       })
 
-      
-      
+      const response = await participantJoined(meetingDetails.id)
+      if(response){
+        toast(`${user.name} u fut ne dhome!`, {
+          dismissible: true
+        })
+      }else{
+        toast.error(`Dicka shkoi gabim ne krijimin e progresit te ${user.name}`, {
+          dismissible: true,
+          description: "Ju lutem rifreskoni dritaren tuaj!"
+        })
+      }
     })
 
     socket.on('user-disconnected', ({ socketId }) => {
@@ -109,7 +157,25 @@ const MeetingComponent = ({socket}: {socket: Socket}) => {
           },
           {
             urls: ['stun:158.101.170.230:3478']
-          }
+          },
+          {
+            urls: ['stun.l.google.com:19302']
+          },
+          {
+            urls: ['stun1.l.google.com:19302']
+          },
+          {
+            urls: ['stun2.l.google.com:19302']
+          },
+          {
+            urls: ['stun3.l.google.com:19302']
+          },
+          {
+            urls: ['stun4.l.google.com:19302']
+          },
+          {
+            urls: ['stun.cloudflare.com:3478']
+          },
         ];
 
         const [sendTransportInfo, recvTransportInfo] = await Promise.all([
