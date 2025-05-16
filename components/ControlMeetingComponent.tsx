@@ -19,7 +19,7 @@ const ControlMeetingComponent = ({audioPaused, videoStreamReady, screenProducer,
     
   return (
     <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50">
-        <div className="bg-mob-oBlack rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
+        <div className="bg-mob-oBlack gap-4 rounded-full px-6 py-3 flex space-x-4 items-center shadow-[0_10px_40px_rgba(0,0,0)] border border-black-200">
             <button 
             className={`${audioPaused ? 'bg-gray-700' : 'bg-mob-secondary'} hover:bg-gray-600 text-white p-3 rounded-full cursor-pointer`} 
             onClick={toggleProducerAudio}
@@ -36,9 +36,11 @@ const ControlMeetingComponent = ({audioPaused, videoStreamReady, screenProducer,
             
             <button 
             onClick={screenProducer ? stopScreenShare : toggleScreenShare} 
-            className={`${screenProducer ? 'bg-mob-secondary hover:bg-gray-700' : 'bg-gray-700 hover:bg-mob-secondary'} cursor-pointer font-medium group text-white px-4 py-2 rounded-full flex items-center gap-1.5 flex-row`}
+            className={`${screenProducer ? 'bg-mob-secondary hover:bg-gray-700' : 'bg-gray-700 hover:bg-mob-secondary'} cursor-pointer font-medium group text-white p-3 rounded-full flex items-center gap-1.5 flex-row`}
             >
-            {!isMobile && screenProducer ? 'Stop Sharing' : 'Share Screen'}
+              {!isMobile && (
+                (screenProducer ? 'Ndalo ndarjen' : 'Ndaje ekranin')
+              )}
             <LuScreenShare size={20} className={`${screenProducer ? 'text-white group-hover:text-mob-secondary' : 'text-mob-secondary group-hover:text-white'}`}/>
             </button>
             

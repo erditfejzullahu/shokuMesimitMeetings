@@ -566,6 +566,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
               autoPlay
               playsInline
               muted
+              style={{transform: "scaleX(-1)", WebkitTransform: "scaleX(-1)"}}
               className={`${Object.keys(remoteStreams).length === 0 ? 'h-fit mx-auto object-contain' : 'h-full absolute top-0 right-0 left-0 mx-auto object-contain'} rounded-xl ${videoStreamReady ? '' : 'invisible'}`}
             />
             {!videoStreamReady && (
