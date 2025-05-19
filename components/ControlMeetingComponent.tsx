@@ -14,8 +14,9 @@ interface ControlProps {
     toggleProducerAudio: () => void
     stopScreenShare: () => void;
     toggleScreenShare: () => void;
+    meetingDetails: MeetingHeaderDetails
 }
-const ControlMeetingComponent = ({audioPaused, videoStreamReady, screenProducer, toggleProducerVideo, toggleProducerAudio, stopScreenShare, toggleScreenShare}: ControlProps) => {
+const ControlMeetingComponent = ({audioPaused, videoStreamReady, screenProducer, toggleProducerVideo, toggleProducerAudio, stopScreenShare, toggleScreenShare, meetingDetails}: ControlProps) => {
     
   return (
     <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50">
@@ -44,7 +45,7 @@ const ControlMeetingComponent = ({audioPaused, videoStreamReady, screenProducer,
             <LuScreenShare size={20} className={`${screenProducer ? 'text-white group-hover:text-mob-secondary' : 'text-mob-secondary group-hover:text-white'}`}/>
             </button>
             
-            <MeetingRightDetails />
+            <MeetingRightDetails meetingDetails={meetingDetails}/>
         </div>
     </div>
   )

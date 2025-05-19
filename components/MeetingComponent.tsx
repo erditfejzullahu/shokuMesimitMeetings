@@ -29,6 +29,7 @@ interface RemoteStreamWithUser {
 
 const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDetails: MeetingHeaderDetails}) => {
   if(socket === null) return <LoadingComponent />
+  console.log(meetingDetails, " meetingdetails");
   
     
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -193,18 +194,6 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
           },
           {
             urls: ['stun:stun1.l.google.com:19302']
-          },
-          {
-            urls: ['stun:stun2.l.google.com:19302']
-          },
-          {
-            urls: ['stun:stun3.l.google.com:19302']
-          },
-          {
-            urls: ['stun:stun4.l.google.com:19302']
-          },
-          {
-            urls: ['stun:stun.cloudflare.com:3478']
           },
         ];
 
@@ -612,12 +601,15 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
   }
 
   return (
-    <div className="bg-mob-primary min-h-screen max-sm:max-h-screen h-full w-screen relative">
+    <div className="bg-mob-primary h-screen !max-h-[calc(100vh-65px)] overflow-hidden w-full relative">
       {/* Video Grid */}
-      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col  ${checkStreamsCss()}  ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
+      <div className={`h-full max-h-[calc(100vh-165px)] w-full p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} ${Object.keys(remoteStreams).length === 0 ? 'absolute' : 'gap-4'}`}>
         {/* Local video */}
-        <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? 'w-full h-full' : ''} ${Object.keys(remoteStreams).length > 1 ? 'row-span-2' : ''}`}>
+        <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-full w-full shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? 'w-full h-full' : ''} ${Object.keys(remoteStreams).length > 1 ? 'row-span-2' : ''}`}>
           <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? 'w-full' : ''}`}>
+          {audioPaused && <div className="absolute top-2 right-2 sm:right-4 sm:top-4 z-50">
+            <AiOutlineAudioMuted size={20} color='#FF9C01'/>
+          </div>}
             <video
               ref={videoRef}
               autoPlay
@@ -650,7 +642,6 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
             <div className="absolute bg-mob-oBlack bottom-3 left-3 bg-opacity-50 text-white px-4 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
               <div className="tooltip">
                 <span className="text-white font-medium text-sm lg:text-base">Ju</span>
-                {audioPaused && ' (Muted)'}
                 <span className="tooltip-text">{user?.name}</span>
               </div>
             </div>
@@ -672,13 +663,13 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
           return (
             <div 
               key={socketId} 
-              className="bg-mob-oBlack w-auto h-auto border-black-200 border shadow-xl flex-1 shadow-black rounded-xl overflow-hidden"
+              className="bg-mob-oBlack w-full h-full border-black-200 border shadow-xl shadow-black rounded-xl overflow-hidden"
             >
               <div className="relative h-full flex-1 my-auto flex items-center justify-center">
-                <div className="absolute top-2 right-2 sm:right-4 sm:top-4 z-50">
-                  {streams.audioPaused && <AiOutlineAudioMuted size={20} color='#FF9C01'/>}
-                </div>
-                {streams.video && (
+              {streams.audioPaused && <div className="absolute top-2 right-2 sm:right-4 sm:top-4 z-50">
+                  <AiOutlineAudioMuted size={20} color='#FF9C01'/>
+                </div>}
+                {streams.video ? (
                   (!streams.videoPaused ? (
                     <>
                     <RemoteVideo stream={streams.video} />
@@ -710,6 +701,23 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
 
                     </div>
                   ))
+                ) : (
+                  <div className="h-full z-50 flex items-center justify-center">
+                        <Image 
+                          src={userRemote?.profilePicture || '/assets/images/logo.png'}
+                          alt={displayName}
+                          width={200}
+                          height={200}
+                          className="rounded-full max-w-24 max-sm:max-w-16"
+                        />
+                        <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 items-center justify-center flex rounded-md border border-black-200 shadow-xl shadow-black">
+                          <div className="tooltip">
+                            <span className="text-white font-medium text-sm lg:text-base line-clamp-1">{displayName}</span>
+                            <span className="tooltip-text">{displayName}</span>
+                          </div>
+                        </div>
+
+                    </div>
                 )}
                 
                 
@@ -781,7 +789,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
           </button>
         </div>
       </div> */}
-      <ControlMeetingComponent audioPaused={audioPaused} videoStreamReady={videoStreamReady} screenProducer={screenProducer} toggleProducerAudio={toggleProducerAudio} toggleProducerVideo={toggleProducerVideo} stopScreenShare={stopScreenShare} toggleScreenShare={toggleScreenShare}/>
+      <ControlMeetingComponent meetingDetails={meetingDetails} audioPaused={audioPaused} videoStreamReady={videoStreamReady} screenProducer={screenProducer} toggleProducerAudio={toggleProducerAudio} toggleProducerVideo={toggleProducerVideo} stopScreenShare={stopScreenShare} toggleScreenShare={toggleScreenShare}/>
     </div>
   )
 }

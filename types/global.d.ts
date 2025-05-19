@@ -11,12 +11,12 @@ interface User {
 
 interface MeetingHeaderDetails {
     id: number;
-    intructor: string;
+    instructor: string;
     instructorId: number;
     title: string;
     description: string;
     scheduleDateTime: string;
-    durationTime?: string;
+    durationTime?: number;
     status: string;
     course: string;
     courseId: number;

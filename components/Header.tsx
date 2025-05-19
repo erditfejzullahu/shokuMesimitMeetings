@@ -12,7 +12,7 @@ const Header = ({meetingDetails}: HeaderProps) => {
   // if(!meetingDetails) return null;
   
   return (
-    <header className="flex justify-between items-center h-[65px]  bg-mob-oBlack shadow-lg shadow-black p-4">
+    <header className="flex justify-between items-center h-[65px] bg-mob-oBlack shadow-xl border-b border-black-200 shadow-black p-4">
         <Link href={"/"}><Image src={"/assets/images/logo.png"} width={100} height={50} alt='logo' className="h-12 w-fit"/></Link>
         {meetingDetails === null && (
           <div className="relative">
