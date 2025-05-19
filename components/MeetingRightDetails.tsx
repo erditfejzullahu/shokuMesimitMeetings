@@ -4,7 +4,6 @@ import { FaCircleInfo } from 'react-icons/fa6'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion';
-import { MdClose } from 'react-icons/md'
 import { BiSupport } from "react-icons/bi";
 import { RxLapTimer } from "react-icons/rx";
 import { TbPhotoVideo } from "react-icons/tb";
@@ -115,7 +114,31 @@ const MeetingRightDetails = ({meetingDetails}: {meetingDetails: MeetingHeaderDet
         <FaCircleInfo size={20}/>
     </button>
     {informationsOpened && <div onClick={handleClose} className="fixed w-full h-full left-0 top-0" style={{background: "rgba(0,0,0,0.4)"}}>
-        <motion.div initial={{opacity: 0, y:0, x:50}} transition={{ duration: 0.5 }} animate={{opacity:1, y:0, x:0}} className="w-[80%] overflow-y-auto flex flex-col justify-between h-full bg-mob-primary border-l border-black-200 ml-auto max-w-[400px] shadow-2xl shadow-black">
+      <motion.div 
+        initial={{ 
+          opacity: 0, 
+          x: "100%",
+          scale: 0.95
+        }} 
+        animate={{ 
+          opacity: 1,
+          x: 0,
+          scale: 1
+        }}
+        exit={{
+          opacity: 0,
+          x: "100%",
+          transition: { duration: 0.3 }
+        }}
+        transition={{ 
+          type: "spring",
+          damping: 20,
+          stiffness: 200,
+          mass: 0.5,
+          bounce: 0.25
+        }}
+        className="w-[80%] overflow-y-auto flex flex-col justify-between h-full bg-mob-primary border-l border-black-200 ml-auto max-w-[400px] shadow-2xl shadow-black"
+      >
           <div>
             <div className="p-4 relative w-fit mx-auto border-b border-black-200">
               <h2 className="font-semibold text-white text-xl text-center max-sm:text-lg">Detaje te takimit</h2>
@@ -181,29 +204,50 @@ const MeetingRightDetails = ({meetingDetails}: {meetingDetails: MeetingHeaderDet
 
               </div>
             </div>
+            
+
+            {/* other informations */}
             <div className="p-4 border-b border-black-200">
+              <h3 className="text-white font-semibold mb-2">Informacioni i Shfletuesit</h3>
               <div className="flex flex-col gap-1">
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
+                <p className="text-gray-200 font-normal text-sm">
+                  Shfletuesi: <span className="text-white font-semibold">{navigator.userAgent.split(' ')[0]}</span>
+                </p>
+                <p className="text-gray-200 font-normal text-sm">
+                  Versioni: <span className="text-white font-semibold">{navigator.appVersion.split(' ')[0]}</span>
+                </p>
+                <p className="text-gray-200 font-normal text-sm">
+                  Platforma: <span className="text-white font-semibold">{navigator.platform}</span>
+                </p>
+                <p className="text-gray-200 font-normal text-sm">
+                  Gjuhë: <span className="text-white font-semibold">{navigator.language}</span>
+                </p>
+                <p className="text-gray-200 font-normal text-sm">
+                  Kamerë/Mikrofon: <span className="text-white font-semibold">
+                    {navigator.mediaDevices ? 'E disponueshme' : 'Jo e disponueshme'}
+                  </span>
+                </p>
               </div>
             </div>
+
+            {/* System Requirements */}
             <div className="p-4 border-b border-black-200">
-              <div className="flex flex-col gap-1">
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-                <p className="text-gray-200 font-normal text-sm">Titulli i takimit: <span className="text-white font-semibold">Titulli aktual</span></p>
-              </div>
+              <h3 className="text-white font-semibold mb-2">Kërkesat e Sistemit</h3>
+              <ul className="text-gray-200 text-sm list-disc pl-5 space-y-1">
+                <li>Shfletuesi i fundit Chrome, Firefox, Edge, ose Safari</li>
+                <li>Lidhje interneti të qëndrueshme (minimum 1 Mbps)</li>
+                <li>Kamerë dhe mikrofon për pjesëmarrje të plotë</li>
+                <li>Leje për të përdorur pajisjet multimedia</li>
+              </ul>
             </div>
+            {/* other infromations */}
+
           </div>
-          <div className="p-4 ml-auto">
+          <div className="p-4 pt-2 flex flex-col gap-2">
+            <p className="text-left font-semibold text-sm">Mundesuar nga <a href='https://murrizi.org' className="text-mob-secondary">Murrizi Co.</a></p>
             <button 
               onClick={() => router.replace('/')}
-              className="border-2 font-semibold border-white px-4 py-2 rounded-md cursor-pointer bg-mob-oBlack hover:bg-mob-secondary transition-all duration-100 ease-in-out"
+              className="border-2 font-semibold ml-auto border-white px-4 py-2 rounded-md cursor-pointer bg-mob-oBlack hover:bg-mob-secondary transition-all duration-100 ease-in-out"
             >
               Dilni
             </button>
