@@ -8,13 +8,12 @@ import { io, Socket } from "socket.io-client";
 import * as mediasoupClient from "mediasoup-client";
 import RemoteVideo from "@/components/RemoteVideo";
 import Image from "next/image";
-import { getAccessToken } from '@/lib/auth/auth';
 import { useGlobalContext } from '@/context/GlobalProvider';
 import LoadingComponent from './LoadingComponent';
 import ControlMeetingComponent from './ControlMeetingComponent';
 import { toast } from 'sonner';
 import { participantJoined } from '@/lib/actions/actions';
-import { isMobile } from 'react-device-detect';
+import { AiOutlineAudio, AiOutlineAudioMuted } from "react-icons/ai";
 
 interface UserData extends User {
   socketId: string;
@@ -110,6 +109,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
           }
         }
       })
+
     })
 
     socket.on("producerResumed", ({producerId, kind, socketId}) => {
@@ -231,7 +231,6 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
 
         // Setup transport event handlers
         const setupTransport = (transport: mediasoupClient.types.Transport, type: string) => {
-          console.log("u thirrz")
           transport.on("connect", async ({ dtlsParameters }, callback, errback) => {
             try {
               await new Promise<void>((resolve, reject) => {
@@ -258,7 +257,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
         socket.emit("getProducers", async (producers: any[]) => {
           console.log(producers, ' producers');
           
-          for (const { producerId, socketId, kind, user } of producers) {
+          for (const { producerId, socketId, kind, user, paused } of producers) {
             // same consume logic you already use
             if (addedProducers.has(producerId)) continue;
             addedProducers.add(producerId);
@@ -290,9 +289,11 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
                 if (kind === "video") {
                   newStreams[socketId].video = stream;
                   newStreams[socketId].user = user;
+                  newStreams[socketId].videoPaused = paused;
                 } else if (kind === "audio") {
                   newStreams[socketId].audio = stream;
                   newStreams[socketId].user = user;
+                  newStreams[socketId].audioPaused = paused;
                 }
         
                 return newStreams;
@@ -558,38 +559,62 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
     // return "grid-rows-1";
   };
   
-  const toggleProducerAudio = () => {
+  const toggleProducerAudio = async () => {
     const audioProducer = producersState.find((item) => item.kind === "audio");
-    console.log(audioProducer?.paused);
     
     if(!audioProducer) return;
 
-    if(audioProducer.paused){
-      audioProducer.resume();
-      setAudioPaused(false)
-    }else{
-      audioProducer.pause();
-      setAudioPaused(true)
+    try {
+      if(audioProducer.paused){
+        await audioProducer.resume();
+        socket.emit("resumeProducer", {
+          producerId: audioProducer.id,
+          kind: "audio"
+        })
+        setAudioPaused(false)
+      }else{
+        await audioProducer.pause();
+        socket.emit("pauseProducer", {
+          producerId: audioProducer.id,
+          kind: "audio"
+        })
+        setAudioPaused(true)
+      }
+    } catch (error) {
+      console.error("error toggling audio", error)
     }
   }
   
-  const toggleProducerVideo = () => {
+  const toggleProducerVideo = async () => {
     const videoProducer = producersState.find((item) => item.kind === "video");
     if(!videoProducer) return;
-    console.log(videoProducer);
-    if(videoProducer.paused){
-      videoProducer.resume();
-      setVideoStreamReady(true)
-    }else{
-      videoProducer.pause();
-      setVideoStreamReady(false)
+    
+    try {
+      if(videoProducer.paused){
+        await videoProducer.resume();
+        socket.emit("resumeProducer", {
+          producerId: videoProducer.id,
+          kind: "video"
+        })
+        setVideoStreamReady(true)
+      }else{
+        await videoProducer.pause();
+        socket.emit("pauseProducer", {
+          producerId: videoProducer.id,
+          kind: "video"
+        })
+        setVideoStreamReady(false)
+      }
+    } catch (error) {
+      console.error("Error toggling video:", error)
     }
+    
   }
 
   return (
     <div className="bg-mob-primary min-h-screen max-sm:max-h-screen h-full w-screen relative">
       {/* Video Grid */}
-      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col  ${checkStreamsCss()} ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
+      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col  ${checkStreamsCss()}  ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
         {/* Local video */}
         <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? 'w-full h-full' : ''} ${Object.keys(remoteStreams).length > 1 ? 'row-span-2' : ''}`}>
           <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? 'w-full' : ''}`}>
@@ -634,7 +659,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
         
         {/* Remote videos */}
         {Object.entries(remoteStreams).map(([socketId, streams]) => {
-          
+
           const userRemote = streams.user || allUsers.find(u => u.socketId === socketId)
           const displayName = userRemote 
             ? `${userRemote.name}` 
@@ -650,38 +675,43 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
               className="bg-mob-oBlack w-auto h-auto border-black-200 border shadow-xl flex-1 shadow-black rounded-xl overflow-hidden"
             >
               <div className="relative h-full flex-1 my-auto flex items-center justify-center">
-                {streams.video ? (
-                  <RemoteVideo stream={streams.video} />
-                ) : (
-                  <div className="absolute left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
-                    {userRemote?.profilePicture ? (
-                      <Image 
-                        src={userRemote.profilePicture}
-                        alt={displayName}
-                        width={200}
-                        height={200}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-sm lg:text-base">
-                        <div className="tooltip">
-                          <span>{userRemote?.name}</span>
-                          <span className="tooltip-text">{userRemote?.name}</span>
-                        </div>
+                <div className="absolute top-2 right-2 sm:right-4 sm:top-4 z-50">
+                  {streams.audioPaused && <AiOutlineAudioMuted size={20} color='#FF9C01'/>}
+                </div>
+                {streams.video && (
+                  (!streams.videoPaused ? (
+                    <>
+                    <RemoteVideo stream={streams.video} />
+                    <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 items-center justify-center flex rounded-md border border-black-200 shadow-xl shadow-black">
+                      <div className="tooltip">
+                      <span className="text-white font-medium text-sm lg:text-base line-clamp-1">
+                        {displayName}
+                      </span>
+                      <span className="tooltip-text">{displayName}</span>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    </>
+                  ) : (
+                    <div className="h-full z-50 flex items-center justify-center">
+
+                        <Image 
+                          src={userRemote?.profilePicture || '/assets/images/logo.png'}
+                          alt={displayName}
+                          width={200}
+                          height={200}
+                          className="rounded-full max-w-24 max-sm:max-w-16"
+                        />
+                        <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 items-center justify-center flex rounded-md border border-black-200 shadow-xl shadow-black">
+                          <div className="tooltip">
+                            <span className="text-white font-medium text-sm lg:text-base line-clamp-1">{displayName}</span>
+                            <span className="tooltip-text">{displayName}</span>
+                          </div>
+                        </div>
+
+                    </div>
+                  ))
                 )}
                 
-                <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 items-center justify-center flex rounded-md border border-black-200 shadow-xl shadow-black">
-                  <div className="tooltip">
-                  <span className="text-white font-medium text-sm lg:text-base line-clamp-1">
-                    {displayName}
-                    {streams.audio === undefined && ' (Muted)'}
-                  </span>
-                  <span className="tooltip-text">{displayName}</span>
-                  </div>
-                </div>
                 
                 {streams.audio && (
                   <audio
