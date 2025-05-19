@@ -205,6 +205,41 @@ body::before {
   }
 }
 
+
+
+/* to show full name when line clamped  */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: left;
+  padding: 5px;
+  padding-top:2px;
+  padding-bottom:2px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  position: absolute;
+  z-index: 1;
+  bottom: 130%; /* show above */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+}
+/* to show full name when line clamped  */
+
+
 /* Optional: Make it bigger and fancier */
 .loader {
   width: 100px;

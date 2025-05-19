@@ -17,6 +17,7 @@ const RemoteVideo = ({ stream }: { stream: MediaStream }) => {
         autoPlay
         muted
         playsInline
+        style={{transform: "scaleX(-1)", WebkitTransform: "scaleX(-1)"}}
         className={`w-auto h-full  object-cover rounded-xl`}
       />
     );

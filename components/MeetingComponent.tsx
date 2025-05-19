@@ -14,6 +14,7 @@ import LoadingComponent from './LoadingComponent';
 import ControlMeetingComponent from './ControlMeetingComponent';
 import { toast } from 'sonner';
 import { participantJoined } from '@/lib/actions/actions';
+import { isMobile } from 'react-device-detect';
 
 interface UserData extends User {
   socketId: string;
@@ -22,7 +23,9 @@ interface UserData extends User {
 interface RemoteStreamWithUser {
   video?: MediaStream
   audio?: MediaStream
-  user?: UserData
+  user?: UserData,
+  videoPaused?: boolean,
+  audioPaused?: boolean
 }
 
 const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDetails: MeetingHeaderDetails}) => {
@@ -94,6 +97,34 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
     const consumers: mediasoupClient.types.Consumer[] = [];
     const addedProducers = new Set<string>();
     
+
+    socket.on("producerPaused", ({producerId, kind, socketId}) => {
+      setRemoteStreams(prev => {
+        if(!prev[socketId]) return prev;
+
+        return {
+          ...prev,
+          [socketId]: {
+            ...prev[socketId],
+            [`${kind}Paused`]: true
+          }
+        }
+      })
+    })
+
+    socket.on("producerResumed", ({producerId, kind, socketId}) => {
+      setRemoteStreams(prev => {
+        if(!prev[socketId]) return prev;
+
+        return {
+          ...prev,
+          [socketId]: {
+            ...prev[socketId],
+            [`${kind}Paused`]: false
+          }
+        }
+      })
+    })
     
     socket.on('user-connected', async ({ user, allUsers } : {user: UserData, allUsers: UserData[]}) => {
       console.log('New user connected:', user)
@@ -249,6 +280,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
               });
         
               consumers.push(consumer);
+              
         
               setRemoteStreams((prev) => {
                 const newStreams = { ...prev };
@@ -521,7 +553,7 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
     if (streams >= 15) return "grid-rows-4";
     if (streams >= 8) return "grid-rows-3";
     if (streams > 2) return "grid-rows-2";
-    if (streams === 1) return "grid rows-1"
+    if (streams === 1) return "grid-rows-1 max-sm:grid-flow-row!"
     if(streams === 0) return ""
     // return "grid-rows-1";
   };
@@ -555,9 +587,9 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
   }
 
   return (
-    <div className="bg-mob-primary min-h-screen h-full w-screen relative">
+    <div className="bg-mob-primary min-h-screen max-sm:max-h-screen h-full w-screen relative">
       {/* Video Grid */}
-      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col ${checkStreamsCss()} ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
+      <div className={`max-h-[calc(100vh-200px)] p-4 relative grid auto-cols-fr grid-flow-col  ${checkStreamsCss()} ${Object.keys(remoteStreams).length === 0 ? 'absolute h-full w-full' : 'gap-4'}`}>
         {/* Local video */}
         <div className={`bg-mob-oBlack border-black-200 border shadow-xl h-auto w-auto shadow-black rounded-xl ${Object.keys(remoteStreams).length === 0 ? 'w-full h-full' : ''} ${Object.keys(remoteStreams).length > 1 ? 'row-span-2' : ''}`}>
           <div className={`relative h-full flex-1 my-auto flex items-center ${Object.keys(remoteStreams).length === 0 ? 'w-full' : ''}`}>
@@ -570,26 +602,32 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
               className={`${Object.keys(remoteStreams).length === 0 ? 'h-fit mx-auto object-contain' : 'h-full absolute top-0 right-0 left-0 mx-auto object-contain'} rounded-xl ${videoStreamReady ? '' : 'invisible'}`}
             />
             {!videoStreamReady && (
-              <div className="absolute h-full left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
-                {user?.profilePicture ? (
-                  <Image
-                    src={user.profilePicture}
-                    alt={user.name}
-                    width={200}
-                    priority={true}
-                    height={200}
-                    className="rounded-full max-w-24"
-                  />
-                ) : (
-                  <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl">
-                    {user?.name}
-                  </div>
-                )}
+              <div className="min-h-[200px]">
+                <div className="absolute h-full left-0 top-0 right-0 bottom-0 z-50 flex items-center justify-center">
+                  {user?.profilePicture ? (
+                    <Image
+                      src={user.profilePicture}
+                      alt={user.name}
+                      width={200}
+                      priority={true}
+                      height={200}
+                      className="rounded-full max-w-24 max-sm:max-w-16"
+                    />
+                  ) : (
+                    <div className="bg-mob-secondary tooltip w-32 h-32 rounded-full flex items-center justify-center text-white text-sm lg:text-base">
+                      <span>{user?.name}</span>
+                      <span className="tooltip-text">{user?.name}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             <div className="absolute bg-mob-oBlack bottom-3 left-3 bg-opacity-50 text-white px-4 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
-              <span className="text-white font-medium">You</span>
-              {audioPaused && ' (Muted)'}
+              <div className="tooltip">
+                <span className="text-white font-medium text-sm lg:text-base">Ju</span>
+                {audioPaused && ' (Muted)'}
+                <span className="tooltip-text">{user?.name}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -601,6 +639,10 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
           const displayName = userRemote 
             ? `${userRemote.name}` 
             : `Participant ${socketId.slice(0, 4)}`
+          console.log(userRemote);
+          
+            // console.log(streams.audio, ' aaudiot');
+            // console.log(streams.video, ' videos')
 
           return (
             <div 
@@ -621,18 +663,24 @@ const MeetingComponent = ({socket, meetingDetails}: {socket: Socket; meetingDeta
                         className="rounded-full"
                       />
                     ) : (
-                      <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-4xl">
-                        {userRemote?.name}
+                      <div className="bg-mob-secondary w-32 h-32 rounded-full flex items-center justify-center text-white text-sm lg:text-base">
+                        <div className="tooltip">
+                          <span>{userRemote?.name}</span>
+                          <span className="tooltip-text">{userRemote?.name}</span>
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
                 
-                <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 rounded-md border border-black-200 shadow-xl shadow-black">
-                  <span className="text-white font-medium">
+                <div className="absolute bg-mob-oBlack bottom-3 left-3 mr-3 bg-opacity-50 text-white px-2 py-1 items-center justify-center flex rounded-md border border-black-200 shadow-xl shadow-black">
+                  <div className="tooltip">
+                  <span className="text-white font-medium text-sm lg:text-base line-clamp-1">
                     {displayName}
                     {streams.audio === undefined && ' (Muted)'}
                   </span>
+                  <span className="tooltip-text">{displayName}</span>
+                  </div>
                 </div>
                 
                 {streams.audio && (

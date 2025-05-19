@@ -19,7 +19,7 @@ export const setAuthCookies = async (tokens: {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: '/',
-        maxAge: 60 * 15
+        maxAge: 60 * 60
     });
 
     (await cookies()).set(REFRESH_TOKEN_KEY, tokens.refreshToken, {
