@@ -15,6 +15,7 @@ interface MeetingHeaderDetails {
     instructorId: number;
     title: string;
     description: string;
+    category?: string;
     scheduleDateTime: string;
     durationTime?: number;
     status: string;

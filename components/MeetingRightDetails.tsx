@@ -167,7 +167,7 @@ const MeetingRightDetails = ({meetingDetails}: {meetingDetails: MeetingHeaderDet
                         <BiSolidCategory size={20} color='#ff9c01'/>
                       </span>
                       <span className="text-sm font-semibold text-white">Kategoria:</span>
-                      <p className="text-mob-secondary font-semibold text-sm">E pakategorizuar</p>
+                      <p className="text-mob-secondary font-semibold text-sm">{meetingDetails.category || "E pakategorizuar"}</p>
                     </div>
                   </div>
                   <div className="bg-mob-primary border flex-1 border-black-200 rounded-md p-2 shadow-black shadow-xl mt-3 relative">
