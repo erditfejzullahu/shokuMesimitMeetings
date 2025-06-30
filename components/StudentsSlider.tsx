@@ -5,60 +5,27 @@ import { motion } from 'framer-motion';
 import { swiperConfig } from '@/utils/swiperConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { getAllStudents } from '@/services/fetchingServices';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import SlidersLoadingComponent from './SlidersLoadingComponent';
 
-interface Student {
-  id: number;
-  name: string;
-  email: string;
-  joined: string;
-  courses: number;
-  image: string;
-}
+function StudentsSliderContent() {
+  const {data: students} = useSuspenseQuery({
+    queryKey: ['allStudents'],
+    queryFn: getAllStudents
+  })
 
-const students: Student[] = [
-  {
-    id: 1,
-    name: "Alex Turner",
-    email: "alex.t@example.com",
-    joined: "2023-01-15",
-    courses: 4,
-    image: "/student1.jpg"
-  },
-  {
-    id: 2,
-    name: "Jamie Smith",
-    email: "jamie.s@example.com",
-    joined: "2023-02-10",
-    courses: 2,
-    image: "/student2.jpg"
-  },
-  {
-    id: 3,
-    name: "Taylor Johnson",
-    email: "taylor.j@example.com",
-    joined: "2022-11-05",
-    courses: 6,
-    image: "/student3.jpg"
-  },
-  {
-    id: 4,
-    name: "Morgan Lee",
-    email: "morgan.l@example.com",
-    joined: "2023-03-22",
-    courses: 3,
-    image: "/student4.jpg"
-  },
-  {
-    id: 5,
-    name: "Casey Brown",
-    email: "casey.b@example.com",
-    joined: "2022-09-18",
-    courses: 5,
-    image: "/student5.jpg"
-  },
-];
+  if(!students || students.length === 0){
+    return <>
+    <div className="flex-1 h-full flex items-center justify-center flex-col gap-1 py-14">
+      <span className="font-bold text-xl">Nuk ka studente</span>
+      <span className="text-gray-200 font-light text-sm">Nese mendoni qe eshte gabim, <Link href={"#"} className="text-mob-secondary font-medium">klikoni ketu</Link></span>
+    </div>
+    </>
+  }
 
-export default function StudentsSlider() {
   return (
     <div className="py-4 pt-8 px-4 rounded-xl">
       <h2 className="text-2xl font-normal text-white">Studente Aktive</h2>
@@ -77,7 +44,7 @@ export default function StudentsSlider() {
               <div className="flex flex-row gap-4 items-center">
                 <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden mb-4 border-4 border-mob-secondary">
                   <img 
-                    src={student.image} 
+                    src={student.profilePictureUrl} 
                     alt={student.name}
                     className="w-full h-full object-cover"
                   />
@@ -91,11 +58,11 @@ export default function StudentsSlider() {
               <div className="flex justify-between w-full mt-4 text-sm">
                 <div>
                   <p className="text-gray-400 text-sm font-semibold">Joined</p>
-                  <p className="text-white font-normal text-base">{student.joined}</p>
+                  <p className="text-white font-normal text-base">{new Date(student.createdAt).toLocaleDateString('sq-AL', {year: "2-digit", day: "2-digit", month: "short"})}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 font-semibold text-sm">Courses</p>
-                  <p className="text-white font-normal text-base">{student.courses}</p>
+                  <p className="text-white font-normal text-base">{student.coursesEnrolled}</p>
                 </div>
               </div>
               
@@ -109,3 +76,13 @@ export default function StudentsSlider() {
     </div>
   );
 }
+
+const StudentsSlider = () => {
+  return (
+    <Suspense fallback={<SlidersLoadingComponent />}>
+      <StudentsSliderContent />
+    </Suspense>
+  )
+}
+
+export default StudentsSlider;

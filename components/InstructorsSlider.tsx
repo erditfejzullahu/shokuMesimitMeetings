@@ -26,7 +26,7 @@ function InstructorsSliderContent() {
     return <>
     <div className="flex-1 h-full flex items-center justify-center flex-col gap-1">
       <span className="font-bold text-xl">Nuk ka instruktore</span>
-      <span className="text-gray-400 font-light text-sm">Nese mendoni qe eshte gabim, <Link href={"#"} className="text-mob-secondary">klikoni ketu</Link></span>
+      <span className="text-gray-200 font-light text-sm">Nese mendoni qe eshte gabim, <Link href={"#"} className="text-mob-secondary font-medium">klikoni ketu</Link></span>
     </div>
     </>
   }

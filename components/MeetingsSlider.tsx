@@ -5,64 +5,38 @@ import { motion } from 'framer-motion';
 import { swiperConfig } from '@/utils/swiperConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { getAllOnlineMeetings } from '@/services/fetchingServices';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import SlidersLoadingComponent from './SlidersLoadingComponent';
 
-type MeetingStatus = 'upcoming' | 'ongoing' | 'completed';
 
-interface Meeting {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  status: MeetingStatus;
-  instructor: string;
-  participants: number;
-}
+function MeetingsSliderContent() {
+  const {data: meetings, status} = useSuspenseQuery({
+    queryKey: ['allMeetings'],
+    queryFn: () => getAllOnlineMeetings()
+  })  
 
-const meetings: Meeting[] = [
-  {
-    id: 1,
-    title: "Advanced Algorithms",
-    date: "2023-06-15",
-    time: "14:00 - 16:00",
-    status: "upcoming",
-    instructor: "Prof. Michael Chen",
-    participants: 24
-  },
-  {
-    id: 2,
-    title: "Web Dev Workshop",
-    date: "2023-06-10",
-    time: "10:00 - 12:00",
-    status: "completed",
-    instructor: "Dr. Emily Rodriguez",
-    participants: 18
-  },
-  {
-    id: 3,
-    title: "ML Fundamentals",
-    date: "2023-06-12",
-    time: "09:00 - 11:00",
-    status: "ongoing",
-    instructor: "Dr. Sarah Johnson",
-    participants: 32
-  },
-  {
-    id: 4,
-    title: "Security Principles",
-    date: "2023-06-18",
-    time: "13:00 - 15:00",
-    status: "upcoming",
-    instructor: "Prof. David Kim",
-    participants: 15
-  },
-];
+  console.log("Current data:", meetings);
+  console.log("Query status:", status);
 
-export default function MeetingsSlider() {
+  if(!meetings || meetings.length === 0){
+    return <>
+    <div className="flex-1 h-full flex items-center justify-center flex-col gap-1 py-14">
+      <span className="font-bold text-xl">Nuk ka takime</span>
+      <span className="text-gray-200 font-light text-sm">Nese mendoni qe eshte gabim, <Link href={"#"} className="text-mob-secondary font-medium">klikoni ketu</Link></span>
+    </div>
+    </>
+  }
+
   const getStatusColor = (status: MeetingStatus): string => {
     switch(status) {
-      case 'upcoming': return 'bg-blue-600';
-      case 'ongoing': return 'bg-green-600';
-      case 'completed': return 'bg-purple-600';
+      case "Nuk ka filluar ende": return 'bg-blue-600';
+      case "Ka filluar": return 'bg-green-600';
+      case "Nuk eshte mbajtur(Mungese Instruktori)": return 'bg-purple-600';
+      case "Eshte anuluar": return "bg-red-700"
+      case "Ka perfunduar": return "bg-black"
       default: return 'bg-gray-600';
     }
   };
@@ -85,30 +59,30 @@ export default function MeetingsSlider() {
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-bold text-white">{meeting.title}</h3>
-                <span className={`${getStatusColor(meeting.status)} text-white text-xs px-2 py-1 rounded-full`}>
+                <span className={`${getStatusColor(meeting.outputStatus)} text-white text-xs px-2 py-1 rounded-full`}>
                   {meeting.status}
                 </span>
               </div>
               
               <div className="mb-4">
-                <p className="text-gray-400">Date & Time</p>
-                <p className="text-white">{meeting.date} • {meeting.time}</p>
+                <p className="text-gray-400">Data & Koha mbajtjes</p>
+                <p className="text-white">{new Date(meeting.scheduleDateTime).toLocaleDateString("sq-AL", {year: "2-digit", month: "short", day: "2-digit"})} • {meeting.durationTime}</p>
               </div>
               
               <div className="mb-4">
-                <p className="text-gray-400">Instructor</p>
-                <p className="text-white">{meeting.instructor}</p>
+                <p className="text-gray-400">Instruktori</p>
+                <p className="text-white">{meeting.instructorName}</p>
               </div>
               
               <div className="mt-auto">
-                <p className="text-gray-400">Participants</p>
+                <p className="text-gray-400">Pjesemarresit</p>
                 <div className="w-full bg-gray-700 rounded-full h-2.5">
                   <div 
                     className="bg-mob-secondary h-2.5 rounded-full" 
-                    style={{ width: `${(meeting.participants / 35) * 100}%` }}
+                    style={{ width: `${(meeting.registered / 35) * 100}%` }}
                   ></div>
                 </div>
-                <p className="text-white text-sm mt-1">{meeting.participants} registered</p>
+                <p className="text-white text-sm mt-1">{meeting.registered} registered</p>
               </div>
             </motion.div>
           </SwiperSlide>
@@ -117,3 +91,13 @@ export default function MeetingsSlider() {
     </div>
   );
 }
+
+const MeetingsSlider = () => {
+  return (
+    <Suspense fallback={<div className="py-14"><SlidersLoadingComponent /></div>}>
+      <MeetingsSliderContent />
+    </Suspense>
+  )
+}
+
+export default MeetingsSlider;

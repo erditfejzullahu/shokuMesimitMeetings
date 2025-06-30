@@ -9,6 +9,7 @@ interface User {
   profilePicture: string;
 }
 
+type MeetingStatus = "Nuk ka filluar ende" | "Eshte anuluar" | "Nuk eshte mbajtur(Mungese Instruktori)" | "Ka filluar" | "Ka perfunduar"
 
 // sliders
 interface Instructors {
@@ -29,7 +30,7 @@ interface AllOnlineMeetings {
   id: number;
   title: string;
   status: number;
-  outputStatus: string;
+  outputStatus: MeetingStatus;
   registered: number;
   instructorName: string;
   scheduleDateTime: Date;
