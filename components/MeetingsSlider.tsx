@@ -2,7 +2,7 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import { motion } from 'framer-motion';
-import { swiperConfig } from '@/utils/swiperConfig';
+import { getSwiperConfig } from '@/utils/swiperConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -18,9 +18,6 @@ function MeetingsSliderContent() {
     queryFn: () => getAllOnlineMeetings()
   })  
 
-  console.log("Current data:", meetings);
-  console.log("Query status:", status);
-
   if(!meetings || meetings.length === 0){
     return <>
     <div className="flex-1 h-full flex items-center justify-center flex-col gap-1 py-14">
@@ -29,6 +26,8 @@ function MeetingsSliderContent() {
     </div>
     </>
   }
+
+  const swiperConfig = getSwiperConfig(meetings.length);
 
   const getStatusColor = (status: MeetingStatus): string => {
     switch(status) {
@@ -46,7 +45,6 @@ function MeetingsSliderContent() {
       <h2 className="text-2xl font-normal text-white">Mbledhjet Online</h2>
       <Swiper
         {...swiperConfig}
-        
         modules={[Pagination, Autoplay]}
         autoplay={{ delay: 3500 }}
         className="pb-12"
@@ -59,8 +57,8 @@ function MeetingsSliderContent() {
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-bold text-white">{meeting.title}</h3>
-                <span className={`${getStatusColor(meeting.outputStatus)} text-white text-xs px-2 py-1 rounded-full`}>
-                  {meeting.status}
+                <span className={`${getStatusColor(meeting.outputStatus)} text-white text-xs px-2 py-1 rounded-full font-medium`}>
+                  {meeting.outputStatus}
                 </span>
               </div>
               

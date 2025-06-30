@@ -2,7 +2,7 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import { motion } from 'framer-motion';
-import { swiperConfig } from '@/utils/swiperConfig';
+import { getSwiperConfig } from '@/utils/swiperConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { useSuspenseQuery } from '@tanstack/react-query';
@@ -10,6 +10,7 @@ import { getAllStudents } from '@/services/fetchingServices';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import SlidersLoadingComponent from './SlidersLoadingComponent';
+import Image from 'next/image';
 
 function StudentsSliderContent() {
   const {data: students} = useSuspenseQuery({
@@ -26,13 +27,17 @@ function StudentsSliderContent() {
     </>
   }
 
+  const swiperConfig = getSwiperConfig(students.length);
+
   return (
     <div className="py-4 pt-8 px-4 rounded-xl">
       <h2 className="text-2xl font-normal text-white">Studente Aktive</h2>
       <Swiper
         {...swiperConfig}
+        watchSlidesProgress={true}
+        slideToClickedSlide={true}
         modules={[Pagination, Autoplay]}
-        autoplay={{ delay: 4000 }}
+        autoplay={{ delay: 4000, reverseDirection: true }}
         className="pb-12"
       >
         {students.map((student) => (
@@ -41,27 +46,29 @@ function StudentsSliderContent() {
               whileHover={{ scale: 1.03 }}
               className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-5 shadow-black h-full flex flex-col"
             >
-              <div className="flex flex-row gap-4 items-center">
-                <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden mb-4 border-4 border-mob-secondary">
-                  <img 
+              <div className="flex flex-row gap-4 items-center flex-1">
+                <div className="max-w-20 max-h-20 w-full h-full rounded-full bg-gray-700 overflow-hidden mb-4 border-4 border-mob-secondary">
+                  <Image 
                     src={student.profilePictureUrl} 
                     alt={student.name}
-                    className="w-full h-full object-cover"
+                    className=" w-full h-full object-cover"
+                    width={100}
+                    height={100}
                   />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-1">{student.name}</h3>
-                  <p className="text-gray-400 text-sm mb-3">{student.email}</p>
+                  <h3 title={student.name} className="text-lg font-bold text-white mb-1 line-clamp-1">{student.name}</h3>
+                  <p title={student.email} className="text-gray-400 text-sm mb-3 line-clamp-1">{student.email}</p>
                 </div>
               </div>
               
               <div className="flex justify-between w-full mt-4 text-sm">
                 <div>
-                  <p className="text-gray-400 text-sm font-semibold">Joined</p>
-                  <p className="text-white font-normal text-base">{new Date(student.createdAt).toLocaleDateString('sq-AL', {year: "2-digit", day: "2-digit", month: "short"})}</p>
+                  <p className="text-gray-400 text-sm font-semibold">Fillimi shfletimit</p>
+                  <p className="text-white font-normal text-base">{new Date(student.createdAt).toLocaleDateString('sq-AL', {year: "numeric", day: "2-digit", month: "short"})}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 font-semibold text-sm">Courses</p>
+                  <p className="text-gray-400 font-semibold text-sm">Kurset</p>
                   <p className="text-white font-normal text-base">{student.coursesEnrolled}</p>
                 </div>
               </div>

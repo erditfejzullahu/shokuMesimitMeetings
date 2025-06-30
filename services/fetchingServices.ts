@@ -7,11 +7,8 @@ export const fetchClientSide = async (endpoint: string) => {
     },})
       
     if(!response.ok){
-        if(response.status === 404){
-            return []
-        }else{
-            throw new Error(`Failed to fetch ${endpoint}`)
-        }
+        console.log(`Failed to fetch ${endpoint}`)
+        return []
     }
     // try {
         const contentType = response.headers.get("content-type");

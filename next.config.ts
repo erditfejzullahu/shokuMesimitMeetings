@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "dove-well-officially.ngrok-free.app",
-        pathname: '/**'
+        pathname: '/**',
       }
     ]
   },

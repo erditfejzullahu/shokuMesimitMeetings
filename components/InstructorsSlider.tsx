@@ -2,7 +2,7 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import { motion } from 'framer-motion';
-import { swiperConfig } from '@/utils/swiperConfig';
+import { getSwiperConfig } from '@/utils/swiperConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { Suspense, useState } from 'react';
@@ -11,6 +11,7 @@ import { getAllInstructors } from '@/services/fetchingServices';
 import LoadingComponent from './LoadingComponent';
 import SlidersLoadingComponent from './SlidersLoadingComponent';
 import Link from 'next/link';
+import Image from 'next/image';
 
 
 function InstructorsSliderContent() {
@@ -21,7 +22,8 @@ function InstructorsSliderContent() {
     retry: 2
     // staleTime: 600000
   })
-
+  
+  
   if(!instructors || instructors.length === 0){
     return <>
     <div className="flex-1 h-full flex items-center justify-center flex-col gap-1">
@@ -30,6 +32,7 @@ function InstructorsSliderContent() {
     </div>
     </>
   }
+  const swiperConfig = getSwiperConfig(instructors.length)
 
   return (
     <div className="py-4 pt-8 px-4 rounded-xl">
@@ -50,18 +53,20 @@ function InstructorsSliderContent() {
               <span className="absolute left-0 bottom-0 text-white font-semibold text-xs bg-mob-primary border-t-2 border-r-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">{instructor.instructorStudents}</span> Studente</span>
               <div className="flex items-center mb-4">
                 <div className="w-16 h-16 rounded-full border-4 border-mob-secondary overflow-hidden mr-4">
-                  <img 
+                  <Image 
                     src={instructor.profilePictureUrl} 
                     alt={instructor.instructorName}
                     className="w-full h-full object-cover"
+                    width={200}
+                    height={200}
                   />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{instructor.instructorName}</h3>
-                  <p className="text-mob-secondary font-semibold text-sm">{instructor.expertise}</p>
+                  <h3 className="text-xl font-bold text-white line-clamp-1" title={instructor.instructorName}>{instructor.instructorName}</h3>
+                  <p className="text-mob-secondary font-semibold text-sm line-clamp-1" title={instructor.expertise}>{instructor.expertise}</p>
                 </div>
               </div>
-              <p className="text-gray-300 mb-4 flex-grow">{instructor.bio}</p>
+              <p className="text-gray-300 mb-4 flex-grow line-clamp-2">{instructor.bio}</p>
               <div className="flex items-center flex-row justify-between">
                 <div className="flex items-center">
                     <div className="flex text-yellow-400 mr-2">

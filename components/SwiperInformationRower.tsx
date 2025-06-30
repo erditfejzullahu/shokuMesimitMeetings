@@ -3,7 +3,7 @@ import React from 'react'
 
 const SwiperInformationRower = ({parentStyle, title, paragraph1, paragraph2}: {parentStyle: string | null; title: string; paragraph1: string | null; paragraph2: string|null}) => {
   return (
-    <div className={`border-4 min-w-[300px] flex flex-col justify-between gap-2 border-black-200 bg-mob-primary shadow-lg shadow-black rounded-xl my-6 p-4 ml-4 ${parentStyle}`}>
+    <div className={`border-4 flex-1 min-w-[300px] flex flex-col justify-between gap-2 border-black-200 bg-mob-primary shadow-lg shadow-black rounded-xl my-6 p-4 ml-4 ${parentStyle}`}>
     <div>
         <div className="relative">
         <h2 className="font-semibold text-xl uppercase text-center !text-white leading-5">{title}</h2>
