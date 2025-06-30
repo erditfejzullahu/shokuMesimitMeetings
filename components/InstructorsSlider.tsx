@@ -5,60 +5,32 @@ import { motion } from 'framer-motion';
 import { swiperConfig } from '@/utils/swiperConfig';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import { Suspense, useState } from 'react';
+import {useSuspenseQuery} from "@tanstack/react-query";
+import { getAllInstructors } from '@/services/fetchingServices';
+import LoadingComponent from './LoadingComponent';
+import SlidersLoadingComponent from './SlidersLoadingComponent';
+import Link from 'next/link';
 
-interface Instructor {
-  id: number;
-  name: string;
-  expertise: string;
-  bio: string;
-  image: string;
-  rating: number;
-}
 
-const instructors: Instructor[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    expertise: "Machine Learning",
-    bio: "PhD in Computer Science with 10+ years of teaching experience.",
-    image: "/instructor1.jpg",
-    rating: 4.9
-  },
-  {
-    id: 2,
-    name: "Prof. Michael Chen",
-    expertise: "Data Structures",
-    bio: "Author of 3 textbooks on algorithms and data structures.",
-    image: "/instructor2.jpg",
-    rating: 4.8
-  },
-  {
-    id: 3,
-    name: "Dr. Emily Rodriguez",
-    expertise: "Web Development",
-    bio: "Full-stack developer with industry experience at top tech firms.",
-    image: "/instructor3.jpg",
-    rating: 4.7
-  },
-  {
-    id: 4,
-    name: "Prof. David Kim",
-    expertise: "Cybersecurity",
-    bio: "Former security consultant with numerous certifications.",
-    image: "/instructor4.jpg",
-    rating: 4.9
-  },
-  {
-    id: 5,
-    name: "Prof. David Kim",
-    expertise: "Cybersecurity",
-    bio: "Former security consultant with numerous certifications.",
-    image: "/instructor4.jpg",
-    rating: 4.9
-  },
-];
+function InstructorsSliderContent() {
+  const {data: instructors} = useSuspenseQuery({
+    queryKey: ['instructors'],
+    queryFn: getAllInstructors,
+    refetchOnWindowFocus: false,
+    retry: 2
+    // staleTime: 600000
+  })
 
-export default function InstructorsSlider() {
+  if(!instructors || instructors.length === 0){
+    return <>
+    <div className="flex-1 h-full flex items-center justify-center flex-col gap-1">
+      <span className="font-bold text-xl">Nuk ka instruktore</span>
+      <span className="text-gray-400 font-light text-sm">Nese mendoni qe eshte gabim, <Link href={"#"} className="text-mob-secondary">klikoni ketu</Link></span>
+    </div>
+    </>
+  }
+
   return (
     <div className="py-4 pt-8 px-4 rounded-xl">
       <h2 className="text-2xl font-normal text-white">Instruktoret tane</h2>
@@ -69,23 +41,23 @@ export default function InstructorsSlider() {
         className="pb-12"
       >
         {instructors.map((instructor) => (
-          <SwiperSlide key={instructor.id} className="pl-4">
+          <SwiperSlide key={instructor.userId} className="pl-4">
             <motion.div 
               whileHover={{ scale: 1.03 }}
               className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-4 shadow-black h-full flex flex-col relative"
             >
-              <span className="absolute right-0 top-0 text-white font-semibold text-xs bg-mob-primary border-l-2 border-b-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">10</span> Kurse</span>
-              <span className="absolute left-0 bottom-0 text-white font-semibold text-xs bg-mob-primary border-t-2 border-r-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">200</span> Studente</span>
+              <span className="absolute right-0 top-0 text-white font-semibold text-xs bg-mob-primary border-l-2 border-b-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">{instructor.instructorCourses}</span> Kurse</span>
+              <span className="absolute left-0 bottom-0 text-white font-semibold text-xs bg-mob-primary border-t-2 border-r-2 rounded-bl-xl rounded-tr-xl border-black-200 px-3 py-1.5"><span className="text-mob-secondary !font-bold">{instructor.instructorStudents}</span> Studente</span>
               <div className="flex items-center mb-4">
                 <div className="w-16 h-16 rounded-full border-4 border-mob-secondary overflow-hidden mr-4">
                   <img 
-                    src={instructor.image} 
-                    alt={instructor.name}
+                    src={instructor.profilePictureUrl} 
+                    alt={instructor.instructorName}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{instructor.name}</h3>
+                  <h3 className="text-xl font-bold text-white">{instructor.instructorName}</h3>
                   <p className="text-mob-secondary font-semibold text-sm">{instructor.expertise}</p>
                 </div>
               </div>
@@ -109,4 +81,12 @@ export default function InstructorsSlider() {
       </Swiper>
     </div>
   );
+}
+
+export default function InstructorsSlide() {
+  return (
+    <Suspense fallback={<SlidersLoadingComponent />}>
+      <InstructorsSliderContent />
+    </Suspense>
+  )
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConnectionProvider } from "@/context/ConnectionContext";
 import GlobalProvider from "@/context/GlobalProvider";
 import { Toaster } from "sonner";
+import { QueryProvider } from "./providers/QueryProvider";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat-sans",
@@ -32,12 +33,14 @@ export default function RootLayout({
       <body
         className={`${montserrat.className} antialiased`}
       >
-        <GlobalProvider>
-        <ConnectionProvider>
-          {children}
-          <Toaster expand />
-        </ConnectionProvider>
-        </GlobalProvider>
+        <QueryProvider>
+          <GlobalProvider>
+            <ConnectionProvider>
+              {children}
+              <Toaster expand />
+            </ConnectionProvider>
+          </GlobalProvider>
+        </QueryProvider>
       </body>
     </html>
   );

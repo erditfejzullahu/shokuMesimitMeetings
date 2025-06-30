@@ -19,7 +19,7 @@ const Page = () => {
         paragraph2={`Me ane te te behurit instruktor, ju keni mundesine e krijimit te mledhjeve online, grumbullimin e studenteve, krijimit te kurseve dhe leksioneve te ndryshme te cilat mund ti paraqitni me ane te mbledhjeve online, etj.`}
       />
       <div className="w-full">
-        <InstructorsSlider />
+        <InstructorsSlider/>
       </div>
     </section>
     <section>
@@ -33,7 +33,7 @@ const Page = () => {
         paragraph2={"Mund te percillni te gjitha veprimet tua, dhe sfundmi nga angazhimi juaj mund edhe te punesoheni diku!"}
       />
       <div className="w-full">
-        <StudentsSlider />
+        <StudentsSlider/>
       </div>
     </section>
     </>

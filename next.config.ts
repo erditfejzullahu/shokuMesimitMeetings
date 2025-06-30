@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', '2xd0xqpd-3000.euw.devtunnels.ms', "*"]
+      allowedOrigins: ['localhost:3000', 'h2krd5h4-3000.euw.devtunnels.ms/', "*"]
     }
   }
 };
