@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import React from 'react'
 
-const SwiperInformationRower = ({parentStyle, title, paragraph1, paragraph2}: {parentStyle: string | null; title: string; paragraph1: string | null; paragraph2: string|null}) => {
+const SwiperInformationRower = ({parentStyle, title, paragraph1, paragraph2, buttonTitle}: {parentStyle: string | null; title: string; paragraph1: string | null; paragraph2: string|null, buttonTitle: string}) => {
   return (
     <div className={`border-4 flex-1 min-w-[300px] flex flex-col justify-between gap-2 border-black-200 bg-mob-primary shadow-lg shadow-black rounded-xl my-6 p-4 ml-4 ${parentStyle}`}>
     <div>
@@ -14,7 +14,7 @@ const SwiperInformationRower = ({parentStyle, title, paragraph1, paragraph2}: {p
         {paragraph2 && (<p className="text-gray-200 text-sm font-normal text-center" dangerouslySetInnerHTML={{__html: paragraph2}}></p>)}
     </div>
     <div>
-        <button className="bg-mob-secondary cursor-pointer px-4 py-1.5 rounded-md font-medium text-white w-full border-4 border-mob-secondary hover:bg-mob-oBlack hover:border-black-200">Behuni instruktor</button>
+        <button className="bg-mob-secondary cursor-pointer px-4 py-1.5 rounded-md font-medium text-white w-full border-4 border-mob-secondary hover:bg-mob-oBlack hover:border-black-200">{buttonTitle}</button>
     </div>
     </div>
   )

@@ -57,19 +57,19 @@ function StudentsSliderContent() {
                   />
                 </div>
                 <div>
-                  <h3 title={student.name} className="text-lg font-bold text-white mb-1 line-clamp-1">{student.name}</h3>
-                  <p title={student.email} className="text-gray-400 text-sm mb-3 line-clamp-1">{student.email}</p>
+                  <h3 title={student.name} className="text-lg font-semibold text-white mb-1 line-clamp-1">{student.name}</h3>
+                  <p title={student.email} className="text-gray-400 text-sm mb-3 font-normal line-clamp-1">{student.email}</p>
                 </div>
               </div>
               
               <div className="flex justify-between w-full mt-4 text-sm">
                 <div>
-                  <p className="text-gray-400 text-sm font-semibold">Fillimi shfletimit</p>
-                  <p className="text-white font-normal text-base">{new Date(student.createdAt).toLocaleDateString('sq-AL', {year: "numeric", day: "2-digit", month: "short"})}</p>
+                  <p className="text-gray-400 text-sm font-normal">Fillimi shfletimit</p>
+                  <p className="text-white font-medium text-base">{new Date(student.createdAt).toLocaleDateString('sq-AL', {year: "numeric", day: "2-digit", month: "short"})}</p>
                 </div>
                 <div>
-                  <p className="text-gray-400 font-semibold text-sm">Kurset</p>
-                  <p className="text-white font-normal text-base">{student.coursesEnrolled}</p>
+                  <p className="text-gray-400 font-normal text-sm">Kurset</p>
+                  <p className="text-white font-medium text-base">{student.coursesEnrolled}</p>
                 </div>
               </div>
               

@@ -56,31 +56,31 @@ function MeetingsSliderContent() {
               className="bg-mob-oBlack border-4 border-black-200 rounded-xl p-6 shadow-xl my-10 mt-5 shadow-black h-full flex flex-col"
             >
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-white">{meeting.title}</h3>
+                <h3 className="text-xl font-semibold text-white">{meeting.title}</h3>
                 <span className={`${getStatusColor(meeting.outputStatus)} text-white text-xs px-2 py-1 rounded-full font-medium`}>
                   {meeting.outputStatus}
                 </span>
               </div>
               
               <div className="mb-4">
-                <p className="text-gray-400">Data & Koha mbajtjes</p>
-                <p className="text-white">{new Date(meeting.scheduleDateTime).toLocaleDateString("sq-AL", {year: "2-digit", month: "short", day: "2-digit"})} • {meeting.durationTime}</p>
+                <p className="text-gray-400 font-normal">Data & Koha mbajtjes</p>
+                <p className="text-white font-medium">{new Date(meeting.scheduleDateTime).toLocaleDateString("sq-AL", {year: "2-digit", month: "short", day: "2-digit"})} • {meeting.durationTime}</p>
               </div>
               
               <div className="mb-4">
-                <p className="text-gray-400">Instruktori</p>
-                <p className="text-white">{meeting.instructorName}</p>
+                <p className="text-gray-400 font-normal">Instruktori</p>
+                <p className="text-white font-medium">{meeting.instructorName}</p>
               </div>
               
               <div className="mt-auto">
-                <p className="text-gray-400">Pjesemarresit</p>
+                <p className="text-gray-400 font-medium">Pjesemarresit</p>
                 <div className="w-full bg-gray-700 rounded-full h-2.5">
                   <div 
                     className="bg-mob-secondary h-2.5 rounded-full" 
                     style={{ width: `${(meeting.registered / 35) * 100}%` }}
                   ></div>
                 </div>
-                <p className="text-white text-sm mt-1">{meeting.registered} registered</p>
+                <p className="text-white text-sm mt-1 font-normal">{meeting.registered} pjesemarres</p>
               </div>
             </motion.div>
           </SwiperSlide>

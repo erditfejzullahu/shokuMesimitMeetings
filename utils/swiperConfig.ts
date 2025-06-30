@@ -2,7 +2,7 @@ import { SwiperOptions } from 'swiper/types';
 
 export const getSwiperConfig = (itemCount: number): SwiperOptions => {
   const baseConfig: SwiperOptions = {
-    slidesPerView: 1,
+    slidesPerView: 2,
     spaceBetween: 20,
     pagination: {
       clickable: true,

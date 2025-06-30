@@ -62,19 +62,19 @@ function InstructorsSliderContent() {
                   />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white line-clamp-1" title={instructor.instructorName}>{instructor.instructorName}</h3>
-                  <p className="text-mob-secondary font-semibold text-sm line-clamp-1" title={instructor.expertise}>{instructor.expertise}</p>
+                  <h3 className="text-xl text-white line-clamp-1 font-semibold" title={instructor.instructorName}>{instructor.instructorName}</h3>
+                  <p className="text-mob-secondary font-medium text-sm line-clamp-1" title={instructor.expertise}>{instructor.expertise}</p>
                 </div>
               </div>
-              <p className="text-gray-300 mb-4 flex-grow line-clamp-2">{instructor.bio}</p>
+              <p className="text-gray-300 mb-4 flex-grow line-clamp-2 font-light">{instructor.bio}</p>
               <div className="flex items-center flex-row justify-between">
                 <div className="flex items-center">
                     <div className="flex text-yellow-400 mr-2">
                     {[...Array(5)].map((_, i) => (
-                        <span key={i}>{i < Math.floor(instructor.rating) ? '★' : '☆'}</span>
+                        <span key={i}>{i < Math.floor(instructor.rating || 3.5) ? '★' : '☆'}</span>
                     ))}
                     </div>
-                    <span className="text-white">{instructor.rating}</span>
+                    <span className="text-white font-medium text-sm">{instructor.rating || 3.5}</span>
                 </div>
                 <div>
                     <button className="rounded-md border-4 border-black-200 bg-mob-primary px-4 py-2 font-medium cursor-pointer hover:bg-mob-oBlack transition-all duration-100">Shiko me shume</button>

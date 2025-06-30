@@ -23,7 +23,7 @@ interface Instructors {
   instructorStudents: number;
   instructorCourses: number;
   whenBecameInstructor: Date;
-  rating: 3.5 //TODO: implement rating system
+  rating: number | null //TODO: implement rating system
 }
 
 interface AllOnlineMeetings {
